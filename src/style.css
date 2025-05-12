@@ -1,0 +1,197 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #F2D6A1;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  color: #84572F;
+}
+
+button {
+  background-color: #84572F;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#wall {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#past-walls {
+  background-color: transparent;
+  border: 2px solid #84572F;
+  color: #84572F;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+  width: auto;
+  display: inline-block;
+}
+
+/* === modal sytle === */
+
+#overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-body {
+  margin-top: 20px;
+}
+
+#post-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  max-width: 95%;
+  background: white;
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0;
+  z-index: 11;
+  border-radius: 10px;
+  padding: 24px;
+  transition: all 0.35s ease;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+
+#post-modal.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+#overlay.show {
+  opacity: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-header h2 {
+  font-family: 'Georgia', serif;
+  font-size: 24px;
+  margin: 0;
+}
+
+.modal-header p {
+  font-size: 14px;
+  color: #333;
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+.modal-header button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  color: #000;
+}
+
+.tabs {
+  display: flex;
+  margin: 16px 0;
+  border-bottom: 2px solid #ccc;
+}
+
+.tabs button {
+  color: #333;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.tab.active {
+  border-bottom: 3px solid #F1A805;
+  color: #F1A805;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.theme-swatches {
+  display: flex;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #aaa;
+}
+
+#submit-post {
+  background: black;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  margin-top: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tab {
+  text-transform: uppercase;
+}
+
+textarea {
+  display: block; /* show by default */
+}
+
+canvas {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: crosshair;
+  display: block;
+  margin: 10px 0;
+}
+
+/* === end of modal sytle === */
