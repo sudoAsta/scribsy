@@ -1,3 +1,6 @@
+/* Scribsy — Clean & Structured CSS */
+
+/* === Base === */
 body {
   font-family: Arial, sans-serif;
   background-color: #F2D6A1;
@@ -8,25 +11,34 @@ body {
 
 h1 {
   color: #84572F;
+  margin-bottom: 0;
 }
 
+p {
+  color: #333;
+  margin-top: 5px;
+}
+
+/* === Buttons === */
 button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+
+#create-post {
   background-color: #84572F;
   color: #fff;
-  border: none;
   padding: 10px 20px;
   font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
+  margin-top: 10px;
 }
 
-#wall {
-  margin-top: 30px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  align-items: flex-start;
+#create-post:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 #past-walls {
@@ -36,14 +48,35 @@ button {
   padding: 8px 16px;
   font-size: 14px;
   border-radius: 5px;
-  cursor: pointer;
   margin-top: 20px;
-  width: auto;
   display: inline-block;
+  width: auto;
 }
 
-/* === modal sytle === */
+/* === Wall Layout === */
+#wall {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: flex-start;
+}
 
+.post-tile {
+  max-width: 200px;
+  padding: 10px;
+  background-color: #EDD5C0;
+  color: #84572F;
+  border-radius: 5px;
+  word-break: break-word;
+  white-space: pre-line;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  margin: 10px;
+  transform: rotate(0deg);
+}
+
+/* === Modal === */
 #overlay {
   position: fixed;
   top: 0; left: 0;
@@ -56,24 +89,23 @@ button {
   transition: opacity 0.3s ease;
 }
 
-.modal-body {
-  margin-top: 20px;
+#overlay.show {
+  opacity: 1;
 }
 
 #post-modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
   width: 600px;
   max-width: 95%;
   background: white;
-  transform: translate(-50%, -50%) scale(0.9);
-  opacity: 0;
-  z-index: 11;
   border-radius: 10px;
   padding: 24px;
-  transition: all 0.35s ease;
+  z-index: 11;
+  opacity: 0;
   box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  transition: all 0.35s ease;
 }
 
 #post-modal.show {
@@ -81,14 +113,11 @@ button {
   transform: translate(-50%, -50%) scale(1);
 }
 
-#overlay.show {
-  opacity: 1;
-}
-
 .hidden {
   display: none;
 }
 
+/* === Modal Content === */
 .modal-header h2 {
   font-family: 'Georgia', serif;
   font-size: 24px;
@@ -109,33 +138,12 @@ button {
   background: none;
   border: none;
   font-weight: bold;
-  cursor: pointer;
+  font-size: 16px;
   color: #000;
 }
 
-.tabs {
-  display: flex;
-  margin: 16px 0;
-  border-bottom: 2px solid #ccc;
-}
-
-.tabs button {
-  color: #333;
-}
-
-.tab {
-  flex: 1;
-  padding: 8px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
-.tab.active {
-  border-bottom: 3px solid #F1A805;
-  color: #F1A805;
+.modal-body {
+  margin-top: 20px;
 }
 
 textarea {
@@ -146,44 +154,7 @@ textarea {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-}
-
-.theme-swatches {
-  display: flex;
-  gap: 8px;
-  margin-left: 10px;
-}
-
-.swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 1px solid #aaa;
-}
-
-#submit-post {
-  background: black;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  margin-top: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.tab {
-  text-transform: uppercase;
-}
-
-textarea {
-  display: block; /* show by default */
+  display: block;
 }
 
 canvas {
@@ -194,4 +165,63 @@ canvas {
   margin: 10px 0;
 }
 
-/* === end of modal sytle === */
+input[type="text"] {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+#submit-post {
+  background: black;
+  color: white;
+  padding: 10px 16px;
+  margin-top: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+/* === Tabs & Mood Select === */
+.tabs {
+  display: flex;
+  margin: 16px 0;
+  border-bottom: 2px solid #ccc;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.tab.active {
+  border-bottom: 3px solid #F1A805;
+  color: #F1A805;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.theme-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #aaa;
+}
