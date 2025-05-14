@@ -96,26 +96,37 @@ submitBtn.addEventListener('click', () => {
   const name = nameInput.value.trim() || 'Anonymous';
   const mood = moodSelect.value;
 
-  if (writeTab.classList.contains('active')) {
-    const text = textArea.value.trim();
-    if (!text) return alert("Please write something first!");
-    const post = document.createElement('div');
-    post.textContent = `"${text}"\n– ${name}`;
-    decoratePost(post, mood);
-    wall.appendChild(post);
-    textArea.value = '';
-  } else {
-    const imageData = canvas.toDataURL();
-    const img = document.createElement('img');
-    img.src = imageData;
-    img.style.maxWidth = '200px';
-    img.style.borderRadius = '5px';
-    img.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
-    img.style.margin = '10px';
-    img.style.transform = `rotate(${randomRotation()}deg)`;
-    wall.appendChild(img);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
+if (writeTab.classList.contains('active')) {
+  const text = textArea.value.trim();
+  if (!text) return alert("Please write something first!");
+
+  const post = document.createElement('div');
+  post.textContent = `"${text}"\n– ${name}`;
+  decoratePost(post, mood);
+
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('post-wrapper');
+  wrapper.appendChild(post);
+  wall.appendChild(wrapper);
+
+  textArea.value = '';
+} else {
+  const imageData = canvas.toDataURL();
+  const img = document.createElement('img');
+  img.src = imageData;
+  img.style.maxWidth = '200px';
+  img.style.borderRadius = '5px';
+  img.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
+  img.style.margin = '10px';
+  img.style.transform = `rotate(${randomRotation()}deg)`;
+
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('post-wrapper');
+  wrapper.appendChild(img);
+  wall.appendChild(wrapper);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
   nameInput.value = '';
   moodSelect.value = '';

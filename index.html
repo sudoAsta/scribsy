@@ -25,7 +25,6 @@
         <textarea id="post-text" placeholder="Your message"></textarea>
         <canvas id="draw-canvas" width="400" height="200" class="hidden"></canvas>
 
-
         <div class="controls">
           <select id="mood-select">
             <option value="">Select Mood</option>
@@ -49,14 +48,30 @@
     </div>
     <!-- end of modal -->
 
-    <h1>FREEDOM WALL</h1>
-    <p id="reset-timer">Reset in: 23 hours 59 minutes</p>
-    <button id="create-post">What’s on your mind?</button>
+  <header id="main-header">
+    <div class="header-left"><h1>Scribsy</h1></div>
+    <div class="header-center"><p id="reset-timer">Reset in: 23 hours 59 minutes</p></div>
+    <div class="header-right"><button id="create-post">What’s on your mind?</button></div>
+  </header>
 
-    <div id="wall">
-      <!-- Posts will go here -->
+  <main>
+    <!-- header is above -->
+    <div id="wall"></div>
+    <!-- modal lives here too -->
+  </main>
+    
+  <footer id="main-footer">
+    <div class="footer-left">
+      <h1>Speak Your Freedom, Set It Free</h1>
+      <p>Unleash Your Voice, No Limits Just You</p>
     </div>
-    <div id="past-walls">View Past Walls</div>
+    <div class="footer-right">
+      <a href="#">View Past Walls</a>
+      <a href="#">About & Guidelines</a>
+    </div>
+  </footer>
+
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
