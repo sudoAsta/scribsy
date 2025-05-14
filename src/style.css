@@ -11,7 +11,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  font-family: Quicksand, Arial, sans-serif;
   background-color: #1E1E1E;
   color: #f0f0f0;
   padding: 20px;
@@ -167,7 +167,7 @@ button {
   max-width: 800px;
   background-color: #ffffff;
   color: #000;
-  border-radius: 12px;
+  border-radius: 5px;
   padding: 32px;
   z-index: 11;
   opacity: 0;
@@ -191,7 +191,8 @@ button {
 }
 
 .modal-header h2 {
-  font-family: 'Georgia', serif;
+  font-family: "Petit Formal Script", cursive;
+  font-weight: 700;
   font-size: 32px;
   margin: 0;
 }
@@ -216,19 +217,25 @@ button {
 
 .tabs {
   display: flex;
-  border-bottom: 2px solid #ccc;
+  border-bottom: 1px solid #ccc; 
   margin-bottom: 10px;
 }
 
 .tab {
-  flex: 1;
-  padding: 12px;
-  font-weight: bold;
+  padding: 15px 50px;
   text-align: center;
-  background: none;
   border: none;
   cursor: pointer;
   font-size: 16px;
+  border-radius: 0%;
+}
+
+.tab-divider {
+  border-right: 1px solid #ccc; /* Divider line */
+}
+
+.tab:hover {
+  color: #F1A805;
 }
 
 .tab.active {
@@ -239,32 +246,36 @@ button {
 textarea, canvas {
   width: 100%;
   border: none;
-  border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
-  padding: 10px 10px;
-  font-size: 16px;
+  padding: 20px 20px;
+  font-size: 21px;
   background-color: #fff;
   color: #000;
   font-family: inherit;
   resize: none;
   box-sizing: border-box;
-  min-height: 200px;
+  min-height: 300px;
+  transition: border 0.3s ease-in-out;
+}
+
+textarea:focus {
+  outline: none;
 }
 
 canvas {
   height: 300px;
   max-height: 40vh;
-  border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
   cursor: crosshair;
 }
 
 input[type="text"], select {
-  width: 50%;
+  width: 30%;
   border: none;
-  border-bottom: 2px solid #ccc;
+  outline: none;
+  border-bottom: 1px solid #ccc;
   padding: 10px 4px;
-  font-size: 14px;
+  font-size: 16px;
   background: transparent;
   color: #000;
   margin-top: 12px;
