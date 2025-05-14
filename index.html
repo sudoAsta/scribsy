@@ -5,49 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
+    <style>
+      body {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
-    <!-- modal -->
-    <div id="overlay" class="hidden"></div>
-    <div id="post-modal" class="hidden">
-      <div class="modal-header">
-        <h2>What’s on your mind?</h2>
-        <p>Share your ideas on your Freedo-Wall, where every voice finds its place.</p>
-        <button id="close-modal">✕ ESC</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="tabs">
-          <button class="tab active" id="write-tab">Write</button>
-          <button class="tab" id="draw-tab">Draw</button>
-        </div>
-
-        <textarea id="post-text" placeholder="Your message"></textarea>
-        <canvas id="draw-canvas" width="400" height="200" class="hidden"></canvas>
-
-        <div class="controls">
-          <select id="mood-select">
-            <option value="">Select Mood</option>
-            <option value="Dreamy">Dreamy</option>
-            <option value="Happy">Happy</option>
-            <option value="Meh">Meh</option>
-          </select>
-
-          <div class="theme-swatches">
-            <span class="swatch" style="background-color: #EDD5C0"></span>
-            <span class="swatch" style="background-color: #F1A805"></span>
-            <span class="swatch" style="background-color: #F2D6A1"></span>
-            <span class="swatch" style="background-color: #B3D9E0"></span>
-            <span class="swatch" style="background-color: #92ADA4"></span>
-          </div>
-        </div>
-
-        <input type="text" id="post-name" placeholder="Name (optional)">
-        <button id="submit-post">SUBMIT</button>
-      </div>
-    </div>
-    <!-- end of modal -->
-
   <header id="main-header">
     <div class="header-left"><h1>Scribsy</h1></div>
     <div class="header-center"><p id="reset-timer">Reset in: 23 hours 59 minutes</p></div>
@@ -70,6 +34,48 @@
       <a href="#">About & Guidelines</a>
     </div>
   </footer>
+
+      <!-- modal -->
+   <div id="overlay" style="display: none;">
+      <div id="post-modal" style="display: none;">
+        <div class="modal-header">
+          <h2>What’s on your mind?</h2>
+          <p>Share your ideas on your Freedo-Wall, where every voice finds its place.</p>
+          <button id="close-modal">✕ ESC</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="tabs">
+            <button class="tab active" id="write-tab">Write</button>
+            <button class="tab" id="draw-tab">Draw</button>
+          </div>
+
+          <textarea id="post-text" placeholder="Your message"></textarea>
+          <canvas id="draw-canvas" width="400" height="200" class="hidden"></canvas>
+
+          <div class="controls">
+            <select id="mood-select">
+              <option value="">Select Mood</option>
+              <option value="Dreamy">Dreamy</option>
+              <option value="Happy">Happy</option>
+              <option value="Meh">Meh</option>
+            </select>
+
+            <div class="theme-swatches">
+              <span class="swatch" style="background-color: #EDD5C0"></span>
+              <span class="swatch" style="background-color: #F1A805"></span>
+              <span class="swatch" style="background-color: #F2D6A1"></span>
+              <span class="swatch" style="background-color: #B3D9E0"></span>
+              <span class="swatch" style="background-color: #92ADA4"></span>
+            </div>
+          </div>
+
+          <input type="text" id="post-name" placeholder="Name (optional)">
+          <button id="submit-post">SUBMIT</button>
+        </div>
+      </div>
+    </div>
+    <!-- end of modal -->
 
 
     <script type="module" src="/src/main.js"></script>

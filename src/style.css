@@ -158,32 +158,32 @@ button {
 }
 
 #post-modal {
+  display: none;
   position: fixed;
-  bottom: -100%;
   left: 50%;
-  transform: translateX(-50%);
+  top: 13vh;
+  transform: translate(-50%, 20%);
   width: 80%;
   max-width: 800px;
   background-color: #ffffff;
   color: #000;
-  border-radius: 12px 12px 0 0;
-  padding: 40px;
+  border-radius: 12px;
+  padding: 32px;
   z-index: 11;
   opacity: 0;
   box-shadow: 0 8px 40px rgba(0,0,0,0.3);
   transition: all 0.4s ease;
-  display: flex;
   flex-direction: column;
   gap: 20px;
   text-align: left;
-  max-height: 90vh;
+  height: 90vh;
   overflow-y: auto;
 }
 
 #post-modal.show {
-  bottom: 5vh; /* Leaves space at the top */
-  transform: translate(-50%, 0);
+  display: flex;
   opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .hidden {
@@ -241,7 +241,7 @@ textarea, canvas {
   border: none;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
-  padding: 48px 16px;
+  padding: 10px 10px;
   font-size: 16px;
   background-color: #fff;
   color: #000;
@@ -252,8 +252,11 @@ textarea, canvas {
 }
 
 canvas {
+  height: 300px;
+  max-height: 40vh;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
   cursor: crosshair;
-  margin-top: 10px;
 }
 
 input[type="text"], select {
@@ -269,6 +272,7 @@ input[type="text"], select {
 }
 
 #submit-post {
+  display: flex;
   background-color: #FFD158;
   color: #874800;
   padding: 14px 24px;

@@ -2,6 +2,12 @@
 
 import './style.css';
 
+window.addEventListener("DOMContentLoaded", () => {
+  document.body.style.visibility = "visible";
+});
+
+let canvasReady = false;
+
 // DOM references
 const createPostButton = document.getElementById('create-post');
 const wall = document.getElementById('wall');
@@ -12,8 +18,10 @@ const closeBtn = document.getElementById('close-modal');
 const writeTab = document.getElementById('write-tab');
 const drawTab = document.getElementById('draw-tab');
 const textArea = document.getElementById('post-text');
+
 const canvas = document.getElementById('draw-canvas');
 const ctx = canvas.getContext('2d');
+
 const submitBtn = document.getElementById('submit-post');
 const nameInput = document.getElementById('post-name');
 const moodSelect = document.getElementById('mood-select');
@@ -40,23 +48,48 @@ updateCountdown();
 // Modal controls
 createPostButton.addEventListener('click', () => showModal());
 closeBtn.addEventListener('click', () => closeModal());
-overlay.addEventListener('click', () => closeModal());
+
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) {
+    closeModal();
+  }
+});
+
 document.addEventListener('keydown', (e) => e.key === 'Escape' && closeModal());
 
 function showModal() {
-  modal.classList.remove('hidden');
-  overlay.classList.remove('hidden');
-  modal.classList.add('show');
-  overlay.classList.add('show');
+  modal.style.display = "flex";
+  overlay.style.display = "block";
+
+  requestAnimationFrame(() => {
+    modal.classList.add("show");
+    overlay.classList.add("show");
+
+    // Wait 1 more frame to make sure canvas is visible
+    setTimeout(() => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvasReady = true; // 🟢 Enable drawing
+
+    }, 50); // slight delay ensures rendering is fully done
+  });
 }
 
 function closeModal() {
-  modal.classList.remove('show');
-  overlay.classList.remove('show');
-  setTimeout(() => {
-    modal.classList.add('hidden');
-    overlay.classList.add('hidden');
-  }, 300);
+  modal.classList.remove("show");
+  overlay.classList.remove("show");
+
+  modal.addEventListener("transitionend", () => {
+    modal.style.display = "none";
+    overlay.style.display = "none";
+    canvasReady = false; // reset for next open
+  }, { once: true });
 }
 
 // Tab toggle logic
@@ -75,21 +108,33 @@ drawTab.addEventListener('click', () => {
 });
 
 // Drawing logic
-let isDrawing = false;
+let drawing = false;
+
 canvas.addEventListener('mousedown', (e) => {
-  isDrawing = true;
+  if (!canvasReady) return;
+
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
   ctx.beginPath();
-  ctx.moveTo(e.offsetX, e.offsetY);
+  ctx.moveTo(x, y);
 });
+
 canvas.addEventListener('mousemove', (e) => {
-  if (isDrawing) {
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
+  if (!drawing || !canvasReady) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  ctx.lineTo(x, y);
+  ctx.stroke();
 });
-canvas.addEventListener('mouseup', () => isDrawing = false);
+
+canvas.addEventListener('mouseup', () => {
+  drawing = false;
+});
+
 
 // Submission logic
 submitBtn.addEventListener('click', () => {
