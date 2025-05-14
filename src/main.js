@@ -57,6 +57,18 @@ overlay.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => e.key === 'Escape' && closeModal());
 
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  canvasReady = true;
+}
+
 function showModal() {
   modal.style.display = "flex";
   overlay.style.display = "block";
@@ -67,16 +79,7 @@ function showModal() {
 
     // Wait 1 more frame to make sure canvas is visible
     setTimeout(() => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvasReady = true; // 🟢 Enable drawing
-
+      resizeCanvas();
     }, 50); // slight delay ensures rendering is fully done
   });
 }
@@ -98,13 +101,16 @@ writeTab.addEventListener('click', () => {
   drawTab.classList.remove('active');
   textArea.style.display = 'block';
   canvas.classList.add('hidden');
+  canvasReady = false;
 });
+
 
 drawTab.addEventListener('click', () => {
   drawTab.classList.add('active');
   writeTab.classList.remove('active');
   textArea.style.display = 'none';
   canvas.classList.remove('hidden');
+  resizeCanvas(); // ← guarantee it's ready when switching to draw
 });
 
 // Drawing logic
@@ -141,41 +147,48 @@ submitBtn.addEventListener('click', () => {
   const name = nameInput.value.trim() || 'Anonymous';
   const mood = moodSelect.value;
 
-if (writeTab.classList.contains('active')) {
-  const text = textArea.value.trim();
-  if (!text) return alert("Please write something first!");
+  if (writeTab.classList.contains('active')) {
+    const text = textArea.value.trim();
+    if (!text) return alert("Please write something first!");
 
-  const post = document.createElement('div');
-  post.textContent = `"${text}"\n– ${name}`;
-  decoratePost(post, mood);
+    const post = document.createElement('div');
+    post.textContent = `"${text}"\n– ${name}`;
+    decoratePost(post, mood);
 
-  const wrapper = document.createElement('div');
-  wrapper.classList.add('post-wrapper');
-  wrapper.appendChild(post);
-  wall.appendChild(wrapper);
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('post-wrapper');
+    wrapper.appendChild(post);
+    wall.appendChild(wrapper);
 
-  textArea.value = '';
-} else {
-  const imageData = canvas.toDataURL();
-  const img = document.createElement('img');
-  img.src = imageData;
-  img.style.maxWidth = '200px';
-  img.style.borderRadius = '5px';
-  img.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
-  img.style.margin = '10px';
-  img.style.transform = `rotate(${randomRotation()}deg)`;
+    textArea.value = '';
+  } else {
+    const imageData = canvas.toDataURL();
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('post-wrapper');
+    wrapper.style.backgroundColor = getMoodColor(mood);
+    wrapper.style.padding = '10px';
+    wrapper.style.borderRadius = '5px';
+    wrapper.style.maxWidth = '200px';
+    wrapper.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
+    wrapper.style.margin = '10px';
+    wrapper.style.transform = `rotate(${randomRotation()}deg)`;
 
-  const wrapper = document.createElement('div');
-  wrapper.classList.add('post-wrapper');
-  wrapper.appendChild(img);
-  wall.appendChild(wrapper);
+    const img = document.createElement('img');
+    img.src = imageData;
+    img.style.maxWidth = '100%';
+    img.style.display = 'block';
+    img.style.borderRadius = '4px';
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
+    wrapper.appendChild(img);
+    wall.appendChild(wrapper);
 
-  nameInput.value = '';
-  moodSelect.value = '';
-  closeModal();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+    nameInput.value = '';
+    moodSelect.value = '';
+    closeModal();
 });
 
 function decoratePost(post, mood) {

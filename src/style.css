@@ -106,7 +106,7 @@ button {
 
 /* === Wall Layout === */
 #wall {
-  column-count: 3;
+  column-count: 4;
   column-gap: 16px;
   margin-top: 30px;
   padding: 0 10px;
@@ -290,7 +290,10 @@ input[type="text"], select {
 
 /* === Footer === */
 #main-footer {
-  margin-top: auto;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -302,6 +305,7 @@ input[type="text"], select {
 
 .footer-left {
   text-align: left;
+  max-width: 50%;
 }
 
 .footer-left h1 {
@@ -311,6 +315,7 @@ input[type="text"], select {
 }
 
 .footer-left p {
+  color: #ccc;
   margin: 0;
   font-size: 13px;
   opacity: 0.8;
@@ -321,7 +326,7 @@ input[type="text"], select {
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
-  padding-right: 20px;
+  padding-right: 50px;
 }
 
 .footer-right a {
@@ -346,7 +351,7 @@ input[type="text"], select {
   }
 
   #wall {
-    column-count: 1;
+    column-count: 2;
   }
 
   .post-tile,
@@ -388,4 +393,22 @@ input[type="text"], select {
   .theme-swatches {
     margin-top: 10px;
   }
+
+  #main-footer {
+        flex-direction: column; /* Stack footer content on small screens */
+        align-items: flex-start;
+        padding: 15px;
+      }
+
+      .footer-left, .footer-right {
+        max-width: 100%; /* Full width on small screens */
+        padding-right: 0;
+      }
+
+      .footer-right {
+        align-items: flex-start; /* Align links to left on mobile */
+        margin-top: 10px;
+      }
 }
+
+ 
