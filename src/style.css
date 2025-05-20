@@ -14,7 +14,7 @@ body {
   font-family: Quicksand, Arial, sans-serif;
   background-color: #1E1E1E;
   color: #f0f0f0;
-  padding: 20px;
+  margin: 0;
   text-align: center;
 }
 
@@ -22,6 +22,19 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Make the main area take all space between header & footer */
+main#main-content {
+  flex: 1;                /* from your existing flex layout */
+  overflow-y: auto;       /* enable vertical scrolling */
+  padding: 0 10px;        /* optional side padding */
+}
+
+.post-wrapper {
+  max-height: 300px;      /* cap at 300px tall */
+  overflow-y: auto;       /* let the post scroll internally */
+  break-inside: avoid;
 }
 
 #main-header {
@@ -72,6 +85,13 @@ h1 {
   margin-bottom: 0;
 }
 
+#empty-state {
+  font-size: 1.2rem;
+  color: #FFE490;
+  opacity: 0.8;
+  text-align: center;
+  margin: 40px 0;
+}
 
 /* === Buttons === */
 button {
@@ -107,6 +127,20 @@ button {
   width: auto;
 }
 
+#submit-post:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none; /* prevent hover-scale */
+}
+
+#char-count {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+
 /* === Wall Layout === */
 #wall {
   column-count: 6;
@@ -123,12 +157,69 @@ button {
   break-inside: avoid;
 }
 
+/* Post style */
 .post-wrapper {
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--mood-color, #EDD5C0); /* default sugar-cookie */
+  border-radius: 5px;
+  padding: 10px;
+  color: #874800;               /* dark brown text */
+  max-width: 200px;
   width: 100%;
-  margin-bottom: 16px;
-  break-inside: avoid;
+  max-height: 300px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+  margin: 10px;
+  overflow: hidden;
+   /* keep the rotation coming from inline style */
+  transform-origin: center center;
+  transition: transform 0.2s ease;
 }
+
+.post-wrapper img {
+  width: 100%;
+  height: 150px;         /* pick a uniform height */
+  object-fit: cover;     /* crop/scale to fill */
+  border-radius: 4px;
+  display: block;
+}
+
+.post-text {
+  font-size: 1rem;
+  line-height: 1.4;
+  text-align: left;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+/* “by Author” styling */
+.post-author {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+/* Mood pill */
+.post-mood {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Mood-specific overrides */
+.post-mood--Dreamy   { background-color: #6aa3b8; } /* deeper teal */
+.post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
+.post-mood--Meh      { background-color: #658a7f; } /* darker Breeze */
+.post-mood--default  { background-color: #84572F; } /* Saddle brown */
 
 .post-tile {
   max-width: 200px;
@@ -141,6 +232,19 @@ button {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   margin: 10px;
   transform: rotate(0deg);
+}
+
+/* Initial hidden state for new posts */
+.post-wrapper {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+/* When we add .visible, it fades up into place */
+.post-wrapper.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* === Modal === */
@@ -400,12 +504,25 @@ input[type="text"], select {
   }
 
   #wall {
-    column-count: 2;
+    column-count: 1;
   }
 
   .post-tile,
   img {
     max-width: 90%;
+  }
+
+  .post-wrapper {
+    padding: 16px;
+  }
+  .post-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  .post-author {
+    font-size: 0.8rem;
+    padding: 4px 10px;
   }
 
   #post-modal {

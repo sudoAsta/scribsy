@@ -20,8 +20,9 @@
     <div class="header-right"><button id="create-post">What’s on your mind?</button></div>
   </header>
 
-  <main>
+  <main id="main-content">
     <!-- header is above -->
+    <div id="empty-state">✨ Be the first to post something today! ✨</div>
     <div id="wall"></div>
     <!-- modal lives here too -->
   </main>
@@ -53,7 +54,8 @@
             <div class="tab" id="draw-tab">Draw</div>
           </div>
 
-          <textarea id="post-text" placeholder="Your message"></textarea>
+          <textarea id="post-text" maxlength="150" placeholder="Type up to 150 characters…"></textarea>
+          <div id="char-count">0 / 150</div>
           <canvas id="draw-canvas" class="hidden"></canvas>
 
           <div class="controls">
