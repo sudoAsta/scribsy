@@ -1,10 +1,30 @@
 // Refactored main.js for Scribsy — clean, modular, readable
 
+import html2canvas from 'html2canvas';
 import './style.css';
 
 window.addEventListener("DOMContentLoaded", () => {
   document.body.style.visibility = "visible";
+
+  // ✅ DELAY RESET LOGIC UNTIL WALL IS LOADED
+  requestAnimationFrame(() => {
+    const lastReset = parseInt(localStorage.getItem('scribsyLastReset') || '0');
+    const now = Date.now();
+    const hoursPassed = (now - lastReset) / (1000 * 60 * 60);
+
+    if (hoursPassed >= 24) {
+      console.log('🕛 24 hours passed — resetting wall.');
+      captureWall();
+      wall.innerHTML = '';
+      localStorage.setItem('scribsyLastReset', now.toString());
+    } else {
+      console.log(`⏳ Last reset was ${Math.floor(hoursPassed)} hour(s) ago.`);
+    }
+  });
+
+  updateCountdown(); // <- keep this here
 });
+
 
 let canvasReady = false;
 
@@ -27,23 +47,20 @@ const nameInput = document.getElementById('post-name');
 const moodSelect = document.getElementById('mood-select');
 
 // Countdown logic
-let hours = 23;
-let minutes = 59;
 function updateCountdown() {
-  resetTimeText.textContent = `Reset in: ${hours} hours ${minutes} minutes`;
-  if (minutes === 0) {
-    if (hours === 0) {
-      resetTimeText.textContent = "Reset soon!";
-      return;
-    }
-    hours--;
-    minutes = 59;
-  } else {
-    minutes--;
+  const lastReset = parseInt(localStorage.getItem('scribsyLastReset') || '0');
+  const now = Date.now();
+  const millisLeft = (24 * 60 * 60 * 1000) - (now - lastReset);
+
+  if (millisLeft <= 0) {
+    resetTimeText.textContent = 'Resetting soon...';
+    return;
   }
+
+  const hours = Math.floor(millisLeft / (1000 * 60 * 60));
+  const minutes = Math.floor((millisLeft % (1000 * 60 * 60)) / (1000 * 60));
+  resetTimeText.textContent = `Reset in: ${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
 }
-setInterval(updateCountdown, 60000);
-updateCountdown();
 
 // Modal controls
 createPostButton.addEventListener('click', () => showModal());
@@ -216,3 +233,56 @@ function getMoodColor(mood) {
 function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
+
+//Capture Wall
+function captureWall() {
+  const wall = document.getElementById('wall');
+
+  // Make sure wall has something in it
+  if (!wall || wall.children.length === 0) {
+    console.warn("Wall is empty, nothing to capture.");
+    return;
+  }
+
+  // Force a slight delay to ensure DOM is settled
+  requestAnimationFrame(() => {
+    html2canvas(wall, { useCORS: true }).then((canvas) => {
+      const imageData = canvas.toDataURL("image/png");
+
+      if (!imageData || imageData === "data:,") {
+        console.error("🛑 Image capture failed.");
+        return;
+      }
+
+      const pastWalls = JSON.parse(localStorage.getItem('scribsyPastWalls') || '[]');
+      pastWalls.unshift({
+        image: imageData,
+        date: new Date().toLocaleString()
+      });
+
+      localStorage.setItem('scribsyPastWalls', JSON.stringify(pastWalls));
+      console.log('✅ Wall captured and saved!');
+    });
+  });
+}
+
+captureWall();
+wall.innerHTML = '';
+window.captureWall = captureWall;
+localStorage.setItem('scribsyLastReset', Date.now().toString());
+
+
+/*
+document.getElementById('reset-button').addEventListener('click', () => {
+  captureWall();         // 🧠 Save snapshot
+  wall.innerHTML = '';   // 🧽 Clear the wall
+}); */
+
+/*
+captureWall(); // save
+wall.innerHTML = ''; // reset
+
+document.getElementById('reset-button').addEventListener('click', () => {
+  captureWall();
+  wall.innerHTML = '';
+});  */

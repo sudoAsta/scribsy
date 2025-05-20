@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Past Walls — Scribsy</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 2rem; color: #FFD158;">📜 Past Walls</h1>
+    <p style="opacity: 0.6; font-size: 0.95rem;">Snapshots of expression before the reset</p>
+  </header>
+
+  <div style="text-align: center; margin-bottom: 30px;">
+    <a href="/" style="
+      display: inline-block;
+      background-color: #FFD158;
+      color: #874800;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      ← Back to Wall
+    </a>
+  </div>
+  <hr style="border: none; border-top: 1px solid #444; margin: 20px auto; width: 80%;">
+
+
+
+  <main id="past-wall-gallery" class="gallery"></main>
+  
+  <script type="module" src="/src/past.js"></script>
+</body>
+
+</html>

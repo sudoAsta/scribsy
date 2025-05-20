@@ -18,6 +18,12 @@ body {
   text-align: center;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 #main-header {
   display: flex;
   align-items: center;
@@ -54,6 +60,7 @@ body {
   padding: 8px 16px;
   font-size: 14px;
   border-radius: 5px;
+  font-weight: bold;
 }
 
 main {
@@ -65,10 +72,6 @@ h1 {
   margin-bottom: 0;
 }
 
-p {
-  color: #333;
-  margin-top: 5px;
-}
 
 /* === Buttons === */
 button {
@@ -106,7 +109,7 @@ button {
 
 /* === Wall Layout === */
 #wall {
-  column-count: 4;
+  column-count: 6;
   column-gap: 16px;
   margin-top: 30px;
   padding: 0 10px;
@@ -298,6 +301,41 @@ input[type="text"], select {
 #submit-post:hover {
   background-color: #FFC737;
 }
+
+/* === Gallery === */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px;
+  padding: 0 40px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gallery-item {
+  background-color: #2E2E2E;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.gallery-item:hover {
+  transform: scale(1.02);
+}
+
+.gallery-item p {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #FFE490;
+}
+
+.gallery-item img {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
 
 /* === Footer === */
 #main-footer {
