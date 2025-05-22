@@ -24,3 +24,8 @@ saved.forEach((entry) => {
 });
 
 });
+
+const img = document.createElement("img");
+img.src = entry.image;
+img.alt = `Scribsy snapshot from ${entry.date}`;  
+

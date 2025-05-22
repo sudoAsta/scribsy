@@ -1,172 +1,264 @@
-// Refactored main.js for Scribsy — clean, modular, readable
+// src/main.js
 
-import html2canvas from 'html2canvas';
+// ————————————————————————————————
+// 1) STYLE IMPORT
+// ————————————————————————————————
 import './style.css';
 
-let postCount = 0;
-const MAX_POSTS = 20;
+// ————————————————————————————————
+// 2) ADMIN MODE (Ctrl+Shift+A to unlock)
+// ————————————————————————————————
+async function hashString(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+const ADMIN_HASH = 'f104d4c4d76bb8f19ece351c9dfd1f93422e4403d8ba32abe4906862de4d6302';
+let isAdmin = false;
 
-window.addEventListener("DOMContentLoaded", () => {
-  document.body.style.visibility = "visible";
-
-  requestAnimationFrame(() => {
-    const lastReset = parseInt(localStorage.getItem('scribsyLastReset') || '0');
-    const now = Date.now();
-    const minutesPassed = (now - lastReset) / (1000 * 60);
-
-    console.log(`⏳ Last reset was ${Math.floor(minutesPassed)} minute(s) ago.`);
-
-    if (minutesPassed >= 3) {
-      console.log('⏰ 3 minutes passed — resetting wall.');
-
-      setTimeout(() => {
-        captureWall(); // Save before clearing
-        wall.innerHTML = '';
-        localStorage.setItem('scribsyLastReset', Date.now().toString());
-      }, 100); // Give time for layout to settle
-    }
-  });
-
-  function checkAutoReset() {
-    const lastReset = parseInt(localStorage.getItem('scribsyLastReset') || '0');
-    const now = Date.now();
-    const minutesPassed = (now - lastReset) / (1000 * 60);
-
-    console.log(`⏳ Last reset was ${Math.floor(minutesPassed)} minute(s) ago.`);
-
-    if (minutesPassed >= 3) {
-      console.log('⏰ 3 minutes passed — resetting wall.');
-
-      setTimeout(() => {
-        captureWall();
-        wall.innerHTML = '';
-        updateEmptyState();
-        localStorage.setItem('scribsyLastReset', Date.now().toString());
-      }, 100);
-    }
+async function askForAdmin() {
+  const attempt = prompt('Enter admin code:');
+  if (attempt !== null && (await hashString(attempt)) === ADMIN_HASH) {
+    isAdmin = true;
+    document.body.classList.add('admin-mode');
+    // retro-add delete buttons to existing posts
+    document.querySelectorAll('.post-wrapper').forEach(addDeleteButton);
   }
-
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-  setInterval(checkAutoReset, 10000); // check every 10 seconds
-
-  updateEmptyState();
-
-
+}
+// trigger on Ctrl+Shift+A
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
 });
 
+// ————————————————————————————————
+// 3) DOM REFERENCES
+// ————————————————————————————————
+const wall           = document.getElementById('wall');
+const createPostBtn  = document.getElementById('create-post');
+const modal          = document.getElementById('post-modal');
+const overlay        = document.getElementById('overlay');
+const closeModalBtn  = document.getElementById('close-modal');
+const writeTab       = document.getElementById('write-tab');
+const drawTab        = document.getElementById('draw-tab');
+const textArea       = document.getElementById('post-text');
+const charCount      = document.getElementById('char-count');
+const canvas         = document.getElementById('draw-canvas');
+const ctx            = canvas.getContext('2d');
+const submitBtn      = document.getElementById('submit-post');
+const nameInput      = document.getElementById('post-name');
+const moodSelect     = document.getElementById('mood-select');
 
-let canvasReady = false;
+let postCount = 0;
+const MAX_POSTS = 10;
 
-// DOM references
-const createPostButton = document.getElementById('create-post');
-const wall = document.getElementById('wall');
-const resetTimeText = document.getElementById('reset-timer');
-const modal = document.getElementById('post-modal');
-const overlay = document.getElementById('overlay');
-const closeBtn = document.getElementById('close-modal');
-const writeTab = document.getElementById('write-tab');
-const drawTab = document.getElementById('draw-tab');
-const textArea = document.getElementById('post-text');
-
-const canvas = document.getElementById('draw-canvas');
-const ctx = canvas.getContext('2d');
-
-const submitBtn = document.getElementById('submit-post');
-const nameInput = document.getElementById('post-name');
-const moodSelect = document.getElementById('mood-select');
-
-// Countdown logic
+// ————————————————————————————————
+// COUNTDOWN TO NEXT MIDNIGHT
+// ————————————————————————————————
 function updateCountdown() {
-  const lastReset = parseInt(localStorage.getItem('scribsyLastReset') || '0');
-  const now = Date.now();
-  const millisLeft = (3 * 60 * 1000) - (now - lastReset);
+  const now = new Date();
+  // set to next midnight
+  const next = new Date(now);
+  next.setHours(24, 0, 0, 0);
 
-  if (millisLeft <= 0) {
-    resetTimeText.textContent = 'Resetting soon...';
+  const diff = next - now;
+  if (diff <= 0) {
+    document.querySelector('#reset-timer .reset-value').textContent = '0h 0m';
     return;
   }
 
-  const minutes = Math.floor((millisLeft % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((millisLeft % (1000 * 60)) / 1000);
-  resetTimeText.textContent = `Reset in: ${minutes}m ${seconds}s`;
+  const hrs = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  document.querySelector('#reset-timer .reset-value').textContent =
+    `${hrs}h ${mins}m`;
 }
 
+// run at startup…
+updateCountdown();
 
-// Modal controls
-createPostButton.addEventListener('click', () => showModal());
-closeBtn.addEventListener('click', () => closeModal());
+// …and every minute
+setInterval(updateCountdown, 60 * 1000);
 
-overlay.addEventListener('click', (e) => {
-  if (e.target === overlay) {
-    closeModal();
+// ————————————————————————————————
+// RANDOM ROTATION HELPER
+// ————————————————————————————————
+function randomRotation() {
+  return Math.floor(Math.random() * 10) - 5; // ±5°
+}
+
+// ————————————————————————————————
+// 4) RENDERING & DELETION HELPERS (Step 5B & 5E)
+// ————————————————————————————————
+function renderPost(post, prepend = false) {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('post-wrapper');
+  wrapper.dataset.id = post.id;
+  wrapper.style.backgroundColor = getMoodColor(post.mood);
+  wrapper.style.transform = `rotate(${randomRotation()}deg)`;
+
+  // content
+  if (post.type === 'text') {
+    const txt = document.createElement('div');
+    txt.className = 'post-text';
+    txt.textContent = `"${post.text}"`;
+    wrapper.append(txt);
+
+  } else if (post.type === 'image') {
+    const img = document.createElement('img');
+    img.src = post.image;
+    img.alt = `Drawing by ${post.name}, mood ${post.mood}`;
+    wrapper.append(img);
   }
-});
 
-document.addEventListener('keydown', (e) => e.key === 'Escape' && closeModal());
+  // footer (by name + mood)
+  const footer = document.createElement('div');
+  footer.className = 'post-footer';
+
+  const author = document.createElement('span');
+  author.className = 'post-author';
+  author.textContent = `by ${post.name}`;
+
+  const pill = document.createElement('span');
+  pill.className = `post-mood post-mood--${post.mood || 'default'}`;
+  pill.textContent = post.mood;
+
+  footer.append(author, pill);
+  wrapper.append(footer);
+
+  // admin delete
+  if (isAdmin) addDeleteButton(wrapper);
+
+  // insert
+  if (prepend) wall.prepend(wrapper);
+  else        wall.append(wrapper);
+
+  // animate
+  requestAnimationFrame(() => wrapper.classList.add('visible'));
+}
+
+function addDeleteButton(wrapper) {
+  if (wrapper.querySelector('.post-delete')) return;
+  const btn = document.createElement('button');
+  btn.className = 'post-delete';
+  btn.textContent = '✕';
+  btn.addEventListener('click', async () => {
+    await fetch(`http://localhost:4000/api/posts/${wrapper.dataset.id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-key': 'scribsyAdmin123' }
+    });
+    wrapper.remove();
+    updateEmptyState();
+    postCount = Math.max(0, postCount - 1);
+  });
+  wrapper.append(btn);
+}
+
+// returns a background color for each mood
+function getMoodColor(mood) {
+  switch (mood) {
+    case 'Dreamy': return '#B3D9E0';
+    case 'Happy':  return '#F1A805';
+    case 'Meh':    return '#658A7F';
+    default:       return '#EDD5C0';
+  }
+}
+
+// ————————————————————————————————
+// 5) EMPTY-STATE HANDLER
+// ————————————————————————————————
+function updateEmptyState() {
+  const empty = document.getElementById('empty-state');
+  empty.style.display = wall.children.length === 0 ? 'block' : 'none';
+}
+
+// ————————————————————————————————
+// 6) INITIAL LOAD (Step 5C)
+// ————————————————————————————————
+async function loadPosts() {
+  try {
+    const res   = await fetch('http://localhost:4000/api/posts');
+    const posts = await res.json();
+    posts.forEach(p => renderPost(p, false));
+    updateEmptyState();
+  } catch (err) {
+    console.error('Failed to load posts', err);
+  }
+}
+
+// ————————————————————————————————
+// 7) MODAL CONTROLS
+// ————————————————————————————————
+createPostBtn.addEventListener('click', () => showModal());
+closeModalBtn.addEventListener('click', () => closeModal());
+overlay.addEventListener('click', e => e.target === overlay && closeModal());
+document.addEventListener('keydown', e => e.key === 'Escape' && closeModal());
 
 function resizeCanvas() {
-  canvas.width = canvas.offsetWidth;
+  canvas.width  = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth   = 2;
+  ctx.lineCap     = 'round';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  // ◀ mark ready for drawing
   canvasReady = true;
 }
 
 function showModal() {
-  modal.style.display = "flex";
-  overlay.style.display = "block";
-
+  modal.style.display   = 'flex';
+  overlay.style.display = 'block';
   requestAnimationFrame(() => {
-    modal.classList.add("show");
-    overlay.classList.add("show");
-
-    // Wait 1 more frame to make sure canvas is visible
-    setTimeout(() => {
-      resizeCanvas();
-    }, 50); // slight delay ensures rendering is fully done
+    modal.classList.add('show');
+    overlay.classList.add('show');
+    setTimeout(resizeCanvas, 50);
   });
 }
 
 function closeModal() {
-  modal.classList.remove("show");
-  overlay.classList.remove("show");
-
-  modal.addEventListener("transitionend", () => {
-    modal.style.display = "none";
-    overlay.style.display = "none";
-    canvasReady = false; // reset for next open
+  modal.classList.remove('show');
+  overlay.classList.remove('show');
+  modal.addEventListener('transitionend', () => {
+    modal.style.display   = 'none';
+    overlay.style.display = 'none';
   }, { once: true });
 }
 
-// Tab toggle logic
+// ————————————————————————————————
+// 8) TAB SWITCHING & CHAR-COUNT (Step 5D)
+// ————————————————————————————————
 writeTab.addEventListener('click', () => {
   writeTab.classList.add('active');
   drawTab.classList.remove('active');
   textArea.style.display = 'block';
-  canvas.classList.add('hidden');
-  canvasReady = false;
+  canvas.style.display   = 'none';
+  charCount.style.display = 'block';
+  charCount.textContent   = `${textArea.value.length} / 100`;
 });
-
 
 drawTab.addEventListener('click', () => {
   drawTab.classList.add('active');
   writeTab.classList.remove('active');
   textArea.style.display = 'none';
-  canvas.classList.remove('hidden');
-  resizeCanvas(); // ← guarantee it's ready when switching to draw
+  canvas.style.display   = 'block';
+  charCount.style.display = 'none';
+
+  // ◀ NEW: size it right now
+  canvasReady = false;
+  resizeCanvas();
 });
 
-// Drawing logic
+// live count
+textArea.addEventListener('input', () => {
+  charCount.textContent = `${textArea.value.length} / 100`;
+});
+
+// ————————————————————————————————
+// 9) DRAWING LOGIC
+// ————————————————————————————————
 let drawing = false;
 
-canvas.addEventListener('mousedown', (e) => {
-  if (!canvasReady) return;
-
+canvas.addEventListener('mousedown', e => {
+  if (!canvasReady) return;      // don’t start if not ready
   drawing = true;
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -175,9 +267,8 @@ canvas.addEventListener('mousedown', (e) => {
   ctx.moveTo(x, y);
 });
 
-canvas.addEventListener('mousemove', (e) => {
-  if (!drawing || !canvasReady) return;
-
+canvas.addEventListener('mousemove', e => {
+  if (!drawing) return;          // only draw when mouse is down
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
@@ -188,206 +279,65 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => {
   drawing = false;
 });
+canvas.addEventListener('mouseleave', () => {
+  drawing = false;
+});
 
-
-// Submission logic
-submitBtn.addEventListener('click', () => {
-  // 🚨 Spam-guard: session limit
+// ————————————————————————————————
+// 10) SUBMIT HANDLER (Step 5D)
+// ————————————————————————————————
+submitBtn.addEventListener('click', async () => {
   if (postCount >= MAX_POSTS) {
-    return alert(`You’ve reached the maximum of ${MAX_POSTS} posts. Try again after reset!`);
+    return alert(`Max ${MAX_POSTS} posts reached.`);
   }
 
   const name = nameInput.value.trim() || 'Anonymous';
   const mood = moodSelect.value;
+  let type, text, image;
 
   if (writeTab.classList.contains('active')) {
-    const text = textArea.value.trim();
-
-    // 🚨 New: enforce the 150-char cap
-    if (text.length === 0) {
-      return alert("Please write something first!");
-    }
-    if (text.length > 150) {
-      return alert("Your post is too long — please keep it under 100 characters.");
-    }
-
-    // ——— Build the wrapper and its content ———
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('post-wrapper');
-
-    const textEl = document.createElement('div');
-    textEl.classList.add('post-text');
-    textEl.textContent = `"${text}"`;
-
-    // post footer with author + mood
-    const footer = document.createElement('div');
-    footer.classList.add('post-footer');
-
-    // Left side: “by Name”
-    const author = document.createElement('span');
-    author.classList.add('post-author');
-    author.textContent = `by ${name}`;
-
-    // Right side: mood pill
-    const moodPill = document.createElement('span');
-    moodPill.classList.add('post-mood');
-    moodPill.classList.add('post-mood', `post-mood--${mood || 'default'}`);
-    moodPill.textContent = mood;
-
-    footer.append(author, moodPill);
-
-    // finalize
-    wrapper.append(textEl, footer);
-    decoratePost(wrapper, mood);
-
-    // ——— Prepend and animate ———
-    wall.prepend(wrapper);
-    requestAnimationFrame(() => wrapper.classList.add('visible'));
-
-    // ——— Update counters & state ———
-    postCount++;
-    updateEmptyState();
-
-    // ——— Cooldown: disable submit for 5s or until under cap ———
-    submitBtn.disabled = true;
-    setTimeout(() => {
-      submitBtn.disabled = postCount >= MAX_POSTS;
-    }, 5000);
-
-    // ——— Clear inputs & close modal ———
-    textArea.value = '';
-    nameInput.value = '';
-    moodSelect.value = '';
-    closeModal();
-  
+    text = textArea.value.trim();
+    if (!text) return alert('Write something first!');
+    if (text.length > 100) return alert('Keep under 100 characters.');
+    type = 'text';
   } else {
-    // ——— Build the wrapper ———
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('post-wrapper');
-    // after you create wrapper…
-    wrapper.style.setProperty('--mood-color', getMoodColor(mood));
-    wrapper.style.transform = `rotate(${randomRotation()}deg)`;
+    image = canvas.toDataURL();
+    type = 'image';
+  }
 
-    // ——— Create & style the image ———
-    const imageData = canvas.toDataURL();
-    const img = document.createElement('img');
-    img.src = imageData;
-    img.style.maxWidth     = '100%';
-    img.style.display      = 'block';
-    img.style.borderRadius = '4px';
-    wrapper.appendChild(img);
-
-    // ——— Add footer (by Name + Mood pill) ———
-    const footer = document.createElement('div');
-    footer.classList.add('post-footer');
-
-    const author = document.createElement('span');
-    author.classList.add('post-author');
-    author.textContent = `by ${name}`;
-
-    const moodPill = document.createElement('span');
-    moodPill.classList.add('post-mood', `post-mood--${mood || 'default'}`);
-    moodPill.textContent = mood;
-
-    footer.append(author, moodPill);
-    wrapper.appendChild(footer);
-
-    // ——— Prepend, animate & style ———
-    wall.prepend(wrapper);
-    requestAnimationFrame(() => wrapper.classList.add('visible'));
-
-    // ——— Clear the drawing canvas ———
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // ——— Update counters & state ———
+  // build & send
+  try {
+    const res = await fetch('http://localhost:4000/api/posts', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type, text, image, name, mood })
+    });
+    const newPost = await res.json();
+    renderPost(newPost, true);
     postCount++;
     updateEmptyState();
-    submitBtn.disabled = true;
-    setTimeout(() => {
-      submitBtn.disabled = postCount >= MAX_POSTS;
-    }, 5000);
-
-    // ——— Close modal ———
-    closeModal();
+  } catch (err) {
+    console.error('Post failed', err);
   }
 
+  // cooldown & cleanup
+  submitBtn.disabled = true;
+  setTimeout(() => submitBtn.disabled = postCount >= MAX_POSTS, 5000);
+  textArea.value = '';
+  nameInput.value = '';
+  moodSelect.value = '';
+  closeModal();
 });
 
-const countDisplay = document.getElementById('char-count');
-textArea.addEventListener('input', () => {
-  countDisplay.textContent = `${textArea.value.length} / 150`;
+// ————————————————————————————————
+// 11) INITIALIZE ON LOAD
+// ————————————————————————————————
+let canvasReady = false;
+window.addEventListener('DOMContentLoaded', () => {
+  document.body.style.visibility = 'visible';
+  resizeCanvas();
+  loadPosts();
+  updateEmptyState();
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
 });
-
-
-function decoratePost(post, mood) {
-  post.style.backgroundColor = getMoodColor(mood);
-  post.style.padding = '10px';
-  post.style.borderRadius = '5px';
-  post.style.color = '#84572F';
-  post.style.maxWidth = '200px';
-  post.style.wordBreak = 'break-word';
-  post.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
-  post.style.margin = '10px';
-  post.style.whiteSpace = 'pre-line';
-  post.style.transform = `rotate(${randomRotation()}deg)`;
-}
-
-function getMoodColor(mood) {
-  switch (mood) {
-    case 'Dreamy': return '#B3D9E0';
-    case 'Happy': return '#F1A805';
-    case 'Meh': return '#92ADA4';
-    default: return '#EDD5C0';
-  }
-}
-
-function randomRotation() {
-  return Math.floor(Math.random() * 10) - 5;
-}
-
-//Capture Wall
-function captureWall() {
-  const wall = document.getElementById('wall');
-
-  // 1️⃣ Bail if empty
-  if (!wall || wall.children.length === 0) {
-    console.warn("Wall is empty, nothing to capture.");
-    return;
-  }
-
-  // 2️⃣ Clone the wall and strip out canvases
-  const clone = wall.cloneNode(true);
-  clone.querySelectorAll('canvas').forEach(c => c.remove());
-
-  // 3️⃣ Render it off‐screen
-  clone.style.position = 'fixed';
-  clone.style.top = '-9999px';
-  document.body.appendChild(clone);
-
-  // 4️⃣ Capture the clone
-  html2canvas(clone, { useCORS: true }).then(cnv => {
-    const imageData = cnv.toDataURL("image/png");
-    if (!imageData || imageData === "data:,") {
-      console.error("🛑 Image capture failed.");
-    } else {
-      const pastWalls = JSON.parse(localStorage.getItem('scribsyPastWalls') || '[]');
-      pastWalls.unshift({ image: imageData, date: new Date().toLocaleString() });
-      localStorage.setItem('scribsyPastWalls', JSON.stringify(pastWalls));
-      console.log('✅ Wall captured and saved!');
-    }
-  }).catch(err => {
-    console.error("❌ Capture error:", err);
-  }).finally(() => {
-    // 5️⃣ Clean up
-    document.body.removeChild(clone);
-  });
-}
-
-window.captureWall = captureWall;
-
-//EmptyState
-function updateEmptyState() {
-  const empty = document.getElementById('empty-state');
-  empty.style.display = wall.children.length === 0 ? 'block' : 'none';
-}
-window.updateEmptyState = updateEmptyState;

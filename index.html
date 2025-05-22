@@ -4,7 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+
+    <!-- Responsive & SEO Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Scribsy — an anonymous digital freedom wall to rant, doodle, and express yourself without limits." />
+
+    <!-- Open Graph (for social sharing) -->
+    <meta property="og:title"       content="Scribsy: Your Anonymous Freedom Wall" />
+    <meta property="og:description" content="Write, draw, and reset daily on Scribsy—no login, no judgment, just pure expression." />
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://YOURDOMAIN.com/" />
+    <meta property="og:image"       content="https://YOURDOMAIN.com/path/to/placeholder-og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Scribsy: Your Anonymous Freedom Wall" />
+    <meta name="twitter:description" content="Write, draw, and reset daily on Scribsy—no login, no judgment, just pure expression." />
+    <meta name="twitter:image"       content="https://YOURDOMAIN.com/path/to/placeholder-og-image.png" />
+
+    <link rel="canonical" href="https://YOURDOMAIN.com/" />
+
+    <title>Scribsy – Anonymous Freedom Wall</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
       @import url('https://fonts.googleapis.com/css2?family=Petit+Formal+Script&family=Quicksand:wght@300..700&display=swap');
@@ -14,13 +34,13 @@
     </style>
   </head>
   <body>
-  <header id="main-header">
+  <header id="main-header" role="banner">
+    <button id="admin-trigger" style="display:none;">🔒</button>
     <div class="header-left"><h1>Scribsy</h1></div>
-    <div class="header-center"><p id="reset-timer">Reset in: 23 hours 59 minutes</p></div>
-    <div class="header-right"><button id="create-post">What’s on your mind?</button></div>
+    <div class="header-right"><button id="create-post" aria-label="Close create post modal">What’s on your mind?</button></div>
   </header>
 
-  <main id="main-content">
+  <main id="main-content" role="main">
     <!-- header is above -->
     <div id="empty-state">✨ Be the first to post something today! ✨</div>
     <div id="wall"></div>
@@ -28,34 +48,38 @@
   </main>
  
     
-  <footer id="main-footer">
+  <footer id="main-footer" role="contentinfo">
     <div class="footer-left">
       <h1>Speak Your Freedom, Set It Free</h1>
       <p>Unleash Your Voice, No Limits Just You</p>
     </div>
     <div class="footer-right">
+      <p id="reset-timer" aria-live="polite" aria-atomic="true">
+        <span class="reset-label">Reset in:</span>
+        <span class="reset-value">24h 00m</span>
+      </p>
       <a href="past.html">View Past Walls</a>
       <a href="#">About & Guidelines</a>
     </div>
   </footer>
 
-      <!-- modal -->
-   <div id="overlay" style="display: none;">
-      <div id="post-modal" style="display: none;">
-        <div class="modal-header">
+    <!-- modal -->
+    <div id="overlay" class="hidden" tabindex="-1">
+      <aside id="post-modal" class="hidden" role="dialog" arial-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header">
           <h2>What’s on your mind?</h2>
           <p>Share your ideas on your Freedo-Wall, where every voice finds its place.</p>
-          <button id="close-modal">✕ ESC</button>
-        </div>
+          <button id="close-modal" aria-label="Close create post modal">×</button>
+        </header>
 
         <div class="modal-body">
           <div class="tabs">
-            <div class="tab tab-divider active" id="write-tab">Write</div>
-            <div class="tab" id="draw-tab">Draw</div>
+            <div class="tab tab-divider active" id="write-tab" aria-controls="post-text">Write</div>
+            <div class="tab" id="draw-tab" aria-controls="draw-canvas">Draw</div>
           </div>
 
-          <textarea id="post-text" maxlength="150" placeholder="Type up to 150 characters…"></textarea>
-          <div id="char-count">0 / 150</div>
+          <textarea id="post-text" maxlength="100" placeholder="Type up to 100 characters…"></textarea>
+          <div id="char-count">0 / 100</div>
           <canvas id="draw-canvas" class="hidden"></canvas>
 
           <div class="controls">
@@ -76,9 +100,9 @@
           </div>
 
           <input type="text" id="post-name" placeholder="Name (optional)">
-          <button id="submit-post">SUBMIT</button>
+          <button id="submit-post" aria-label="Submit your post">SUBMIT</button>
         </div>
-      </div>
+      </aside>
     </div>
     <!-- end of modal -->
 

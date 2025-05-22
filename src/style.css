@@ -18,6 +18,14 @@ body {
   text-align: center;
 }
 
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  14%  { transform: scale(1.1); }
+  28%  { transform: scale(1); }
+  42%  { transform: scale(1.1); }
+  70%  { transform: scale(1); }
+}
+
 img {
   max-width: 100%;
   height: auto;
@@ -45,7 +53,8 @@ main#main-content {
   background-color: transparent;
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 10;
+  position: relative;
   border-bottom: 1px solid #444;
 }
 
@@ -56,24 +65,12 @@ main#main-content {
   margin: 0;
 }
 
-.header-center {
-  flex: 1;
-  text-align: center;
-}
-
-#reset-timer {
-  margin: 0;
-  font-size: 14px;
-  color: #FFE490;
-}
-
 .header-right button {
   background-color: #FFD158;
   color: #874800;
-  padding: 8px 16px;
+  padding: 10px 16px;
   font-size: 14px;
-  border-radius: 5px;
-  font-weight: bold;
+  border-radius: 50px;
 }
 
 main {
@@ -107,7 +104,10 @@ button {
   color: #874800;
   padding: 10px 20px;
   font-size: 16px;
-  margin-top: 10px;
+  margin: 5px;
+  font-weight: bold;
+  animation: heartbeat 2s ease-in-out infinite;
+  transform-origin: center center;
 }
 
 #create-post:hover {
@@ -146,7 +146,8 @@ button {
   column-count: 6;
   column-gap: 16px;
   margin-top: 30px;
-  padding: 0 10px;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 .post-tile,
@@ -159,18 +160,20 @@ button {
 
 /* Post style */
 .post-wrapper {
-  display: flex;
+  display: inline-block;
   flex-direction: column;
   justify-content: space-between;
   background-color: var(--mood-color, #EDD5C0); /* default sugar-cookie */
   border-radius: 5px;
-  padding: 10px;
   color: #874800;               /* dark brown text */
   max-width: 200px;
   width: 100%;
   max-height: 300px;
+  margin: 0 0 16px;
+  break-inside: avoid;
+  padding: 20px;
+  box-sizing: border-box;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-  margin: 10px;
   overflow: hidden;
    /* keep the rotation coming from inline style */
   transform-origin: center center;
@@ -183,6 +186,7 @@ button {
   object-fit: cover;     /* crop/scale to fill */
   border-radius: 4px;
   display: block;
+  margin-bottom: 16px;
 }
 
 .post-text {
@@ -220,6 +224,51 @@ button {
 .post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
 .post-mood--Meh      { background-color: #658a7f; } /* darker Breeze */
 .post-mood--default  { background-color: #84572F; } /* Saddle brown */
+
+/* Position the delete button top-right of each tile */
+.post-wrapper {
+  position: relative;  /* ensure absolute children are relative to this */
+}
+
+.post-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.8);
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #874800;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.post-delete:hover {
+  opacity: 1;
+}
+
+/* Hide delete buttons when not in admin-mode */
+body:not(.admin-mode) .post-delete {
+  display: none;
+}
+
+/* Show this only if you add the .show-admin-trigger class in the console */
+body.show-admin-trigger #admin-trigger {
+  display: inline-block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
 
 .post-tile {
   max-width: 200px;
@@ -324,7 +373,7 @@ button {
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid #ccc; 
+  border-bottom: 1px solid #000; 
   margin-bottom: 10px;
 }
 
@@ -338,7 +387,7 @@ button {
 }
 
 .tab-divider {
-  border-right: 1px solid #ccc; /* Divider line */
+  border-right: 1px solid #000; /* Divider line */
 }
 
 .tab:hover {
@@ -353,7 +402,7 @@ button {
 textarea, canvas {
   width: 100%;
   border: none;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #000;
   padding: 20px 20px;
   font-size: 21px;
   background-color: #fff;
@@ -361,7 +410,7 @@ textarea, canvas {
   font-family: inherit;
   resize: none;
   box-sizing: border-box;
-  min-height: 300px;
+  min-height: 250px;
   transition: border 0.3s ease-in-out;
 }
 
@@ -372,7 +421,7 @@ textarea:focus {
 canvas {
   height: 300px;
   max-height: 40vh;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #000;
   cursor: crosshair;
 }
 
@@ -380,7 +429,7 @@ input[type="text"], select {
   width: 30%;
   border: none;
   outline: none;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #000;
   padding: 10px 4px;
   font-size: 16px;
   background: transparent;
@@ -391,12 +440,12 @@ input[type="text"], select {
 
 #submit-post {
   display: flex;
-  background-color: #FFD158;
-  color: #874800;
+  background-color: #000;
+  color: #fff;
   padding: 14px 24px;
   border: none;
   font-size: 16px;
-  border-radius: 6px;
+  border-radius: 50px;
   cursor: pointer;
   margin-top: 24px;
   align-self: flex-start;
@@ -474,6 +523,25 @@ input[type="text"], select {
   opacity: 0.8;
 }
 
+#reset-timer {     
+  margin: 0 0 10px;          /* space below before links */
+  text-align: right;         /* right-align in its container */
+} 
+
+#reset-timer .reset-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #FFE490;
+  margin-bottom: 4px;
+}
+
+#reset-timer .reset-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #FFE490;
+}
+
 .footer-right {
   display: flex;
   flex-direction: column;
@@ -483,7 +551,7 @@ input[type="text"], select {
 }
 
 .footer-right a {
-  color: #FFE490;
+  color: #fff;
   text-decoration: none;
   font-weight: 500;
 }
