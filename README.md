@@ -35,11 +35,4 @@ TBA
   - Meta tags (description, Open Graph, Twitter cards)  
   - Semantic landmarks (header, main, footer)  
 
----
 
-## ⚙️ Local Setup
-
-1. **Clone** the repo  
-   ```bash
-   git clone https://github.com/sudoAsta/scribsy.git
-   cd scribsy
