@@ -11,7 +11,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-family: Quicksand, Arial, sans-serif;
+  font-family: "Host Grotesk", Arial, sans-serif;
   background-color: #1E1E1E;
   color: #f0f0f0;
   margin: 0;
@@ -66,9 +66,9 @@ main#main-content {
 }
 
 .header-right button {
-  background-color: #FFD158;
-  color: #874800;
-  padding: 10px 16px;
+  background-color: #fff100;
+  color: #000;
+  padding: 20px;
   font-size: 14px;
   border-radius: 50px;
 }
@@ -100,12 +100,12 @@ button {
 }
 
 #create-post {
-  background-color: #FFD158;
-  color: #874800;
-  padding: 10px 20px;
-  font-size: 16px;
+  background-color: #fff100;
+  color: #000;
+  padding: 20px;
+  font-size: 14px;
   margin: 5px;
-  font-weight: bold;
+  font-weight: 500;
   animation: heartbeat 2s ease-in-out infinite;
   transform-origin: center center;
 }
@@ -296,6 +296,15 @@ body.show-admin-trigger #admin-trigger {
   transform: translateY(0);
 }
 
+/* ─── Past Walls: show archived posts immediately ─── */
+.archive-section .post-wrapper {
+  /* Make them fully visible */
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  /* And turn off the transition here */
+  transition: none !important;
+}
+
 /* === Modal === */
 #overlay {
   position: fixed;
@@ -347,10 +356,11 @@ body.show-admin-trigger #admin-trigger {
 }
 
 .modal-header h2 {
-  font-family: "Petit Formal Script", cursive;
-  font-weight: 700;
-  font-size: 32px;
+  font-family: "Host Grotesk", sans-serif;
+  font-weight: 800;
+  font-size: 42px;
   margin: 0;
+  letter-spacing: -1px;
 }
 
 .modal-header p {

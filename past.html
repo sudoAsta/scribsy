@@ -26,10 +26,16 @@
   <title>Scribsy – Past Walls Archive</title>
 
   <link rel="stylesheet" href="src/style.css" />
+  <style>.post-wrapper {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+      }   
+  </style>
 </head>
 <body>
-  <header style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-size: 2rem; color: #FFD158;">📜 Past Walls</h1>
+ <header style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 2rem; color: #FFD158;">Past Walls</h1>
     <p style="opacity: 0.6; font-size: 0.95rem;">Snapshots of expression before the reset</p>
   </header>
 
@@ -52,7 +58,10 @@
 
 
 
-  <main id="past-wall-gallery" class="gallery"></main>
+  <main id="main-content" role="main">
+    <p id="no-archives" style="display: none;">No archives yet.</p>
+    <div id="archives-container"></div>
+  </main>
   
   <script type="module" src="/src/past.js"></script>
 </body>

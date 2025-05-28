@@ -339,5 +339,5 @@ window.addEventListener('DOMContentLoaded', () => {
   loadPosts();
   updateEmptyState();
   updateCountdown();
-  setInterval(updateCountdown, 60000);
+  setInterval(updateCountdown, 60000); 
 });
