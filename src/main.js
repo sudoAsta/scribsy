@@ -5,6 +5,8 @@
 // ————————————————————————————————
 import './style.css';
 
+const API = import.meta.env.VITE_API_URL;
+
 // ————————————————————————————————
 // 2) ADMIN MODE (Ctrl+Shift+A to unlock)
 // ————————————————————————————————
@@ -46,8 +48,6 @@ const ctx            = canvas.getContext('2d');
 const submitBtn      = document.getElementById('submit-post');
 const nameInput      = document.getElementById('post-name');
 const moodSelect     = document.getElementById('mood-select');
-
-const API = import.meta.env.VITE_API_URL;
 
 let postCount = 0;
 const MAX_POSTS = 10;
@@ -143,7 +143,7 @@ function addDeleteButton(wrapper) {
   btn.className = 'post-delete';
   btn.textContent = '✕';
   btn.addEventListener('click', async () => {
-    await fetch(`http://localhost:4000/api/posts/${wrapper.dataset.id}`, {
+    await fetch(`${API}/api/posts/${wrapper.dataset.id}`, {
       method: 'DELETE',
       headers: { 'x-admin-key': 'scribsyAdmin123' }
     });
