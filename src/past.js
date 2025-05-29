@@ -2,8 +2,33 @@ import './style.css';
 
 const API = import.meta.env.VITE_API_URL;
 
-// e.g. load posts:
-const res = await fetch(`${API}/api/posts`);
+// ─── Load & render archives ─────────────────────────────
+async function loadArchives() {
+  const noArchives = document.getElementById('no-archives');
+  const container  = document.getElementById('archives-container');
+  container.innerHTML = '';
+  noArchives.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/api/archives`);
+    const archives = await res.json();
+
+    if (!archives.length) {
+      noArchives.style.display = 'block';
+    } else {
+      archives.forEach(renderArchive);
+    }
+  } catch (err) {
+    console.error('Failed to load archives:', err);
+    noArchives.textContent = 'Unable to load archives.';
+    noArchives.style.display = 'block';
+  }
+}
+
+// ─── Kick things off on DOM ready ───────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadArchives();
+});
 
 
 // ─── Mood-color helper (keep in sync with main.js) ─────────
