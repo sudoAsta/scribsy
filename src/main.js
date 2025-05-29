@@ -177,7 +177,7 @@ function updateEmptyState() {
 // ————————————————————————————————
 async function loadPosts() {
   try {
-    const res   = await fetch('${API}api/posts');
+    const res   = await fetch(`${API}/api/posts`);
     const posts = await res.json();
     posts.forEach(p => renderPost(p, false));
     updateEmptyState();
@@ -309,7 +309,7 @@ submitBtn.addEventListener('click', async () => {
 
   // build & send
   try {
-    const res = await fetch('${API}/api/posts', {
+    const res = await fetch(`${API}/api/posts`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ type, text, image, name, mood })

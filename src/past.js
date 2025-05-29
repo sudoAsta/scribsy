@@ -78,7 +78,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const container  = document.getElementById('archives-container');
 
   try {
-    const res = await fetch('${API}/api/archives');
+    const res = await fetch(`${API}/api/archives`);
     if (!res.ok) throw new Error(`Status ${res.status}`);
     const archives = await res.json();
 
