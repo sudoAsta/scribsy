@@ -334,6 +334,7 @@ body.show-admin-trigger #admin-trigger {
   color: #000;
   border-radius: 5px;
   padding: 32px;
+  padding-bottom: 80px;
   z-index: 11;
   opacity: 0;
   box-shadow: 0 8px 40px rgba(0,0,0,0.3);
@@ -341,7 +342,7 @@ body.show-admin-trigger #admin-trigger {
   flex-direction: column;
   gap: 20px;
   text-align: left;
-  height: 90vh;
+  max-height: 95vh;
   overflow-y: auto;
 }
 
@@ -458,7 +459,10 @@ input[type="text"], select {
   border-radius: 50px;
   cursor: pointer;
   margin-top: 24px;
-  align-self: flex-start;
+  align-self: center;
+  position: sticky;
+  bottom: 16px;
+  z-index: 1;
 }
 
 #submit-post:hover {
@@ -571,6 +575,12 @@ input[type="text"], select {
 }
 
 /* === Responsive === */
+@media (max-height: 750px) {
+  #post-modal {
+    max-height: 85vh;
+  }
+}
+
 @media (max-width: 768px) {
   body {
     padding: 10px;
