@@ -1,5 +1,11 @@
 import './style.css';
 
+const API = import.meta.env.VITE_API_URL;
+
+// e.g. load posts:
+const res = await fetch(`${API}/api/posts`);
+
+
 // ─── Mood-color helper (keep in sync with main.js) ─────────
 function getMoodColor(mood) {
   switch (mood) {
@@ -72,7 +78,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const container  = document.getElementById('archives-container');
 
   try {
-    const res = await fetch('http://localhost:4000/api/archives');
+    const res = await fetch('${API}/api/archives');
     if (!res.ok) throw new Error(`Status ${res.status}`);
     const archives = await res.json();
 
