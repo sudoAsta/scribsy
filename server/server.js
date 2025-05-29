@@ -7,7 +7,12 @@ import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',           // dev
+    'https://scribsy.io',              // your front-end
+  ]
+}));
 app.use(express.json());
 
 // ─── LowDB setup with both posts & archives ───────────────

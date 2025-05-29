@@ -47,6 +47,8 @@ const submitBtn      = document.getElementById('submit-post');
 const nameInput      = document.getElementById('post-name');
 const moodSelect     = document.getElementById('mood-select');
 
+const API = import.meta.env.VITE_API_URL;
+
 let postCount = 0;
 const MAX_POSTS = 10;
 
@@ -175,7 +177,7 @@ function updateEmptyState() {
 // ————————————————————————————————
 async function loadPosts() {
   try {
-    const res   = await fetch('http://localhost:4000/api/posts');
+    const res   = await fetch('${API}api/posts');
     const posts = await res.json();
     posts.forEach(p => renderPost(p, false));
     updateEmptyState();
@@ -307,7 +309,7 @@ submitBtn.addEventListener('click', async () => {
 
   // build & send
   try {
-    const res = await fetch('http://localhost:4000/api/posts', {
+    const res = await fetch('${API}/api/posts', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ type, text, image, name, mood })
