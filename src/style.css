@@ -222,7 +222,7 @@ button {
 /* Mood-specific overrides */
 .post-mood--Dreamy   { background-color: #6aa3b8; } /* deeper teal */
 .post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
-.post-mood--Meh      { background-color: #658a7f; } /* darker Breeze */
+.post-mood--Meh      { background-color: #DFBA70; } /* darker Breeze */
 .post-mood--default  { background-color: #84572F; } /* Saddle brown */
 
 /* Position the delete button top-right of each tile */

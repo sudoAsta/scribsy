@@ -98,6 +98,13 @@ app.get('/api/archives', async (req, res) => {
   res.json(archives);
 });
 
+// ——— Manual trigger for Render cron job ———
+app.post('/api/archive-now', async (req, res) => {
+  await archiveNow(); // ← uses your existing function
+  res.json({ success: true });
+});
+
+
 // ─── Health-check endpoint ──────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
