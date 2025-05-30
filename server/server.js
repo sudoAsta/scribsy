@@ -1,4 +1,7 @@
-// server/server.js
+// ─────────────────────────────────────────────
+// Scribsy Server (Express + LowDB)
+// ─────────────────────────────────────────────
+
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
@@ -7,58 +10,61 @@ import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
 
 const app = express();
+
+// ─── Middleware ────────────────────────────────
 app.use(cors({
   origin: [
-    'http://localhost:5173',           // dev
-    'https://scribsy.io',              // your front-end
+    'http://localhost:5173',
+    'https://scribsy.io',
   ]
 }));
 app.use(express.json());
 
-// ─── LowDB setup with both posts & archives ───────────────
+// ─── DB Setup ───────────────────────────────────
 const adapter = new JSONFile('db.json');
 const db = new Low(adapter, { posts: [], archives: [] });
 await db.read();
 
-// ─── Archive helper ──────────────────────────────
+// ─── Archive Helper ─────────────────────────────
 async function archiveNow() {
   await db.read();
 
-  // ─── Ensure both collections exist ───────────────
   db.data ||= {};
-  db.data.posts    ||= [];
+  db.data.posts ||= [];
   db.data.archives ||= [];
 
-  await db.write();   // flush these defaults back into db.json
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
 
-  // ─── Only archive if there’s something to save ────
+  // ✅ Avoid archiving multiple times on same day
+  if (db.data.archives[0]?.date?.startsWith(today)) {
+    console.log('⚠️ Already archived today. Skipping.');
+    return;
+  }
+
   if (db.data.posts.length) {
     db.data.archives.unshift({
-      date: new Date().toISOString(),
+      date: now.toISOString(),
       posts: db.data.posts
     });
     db.data.posts = [];
     await db.write();
-    console.log('🔔 Manual archive & reset complete.');
+    console.log('📦 Archived posts for', today);
   }
 }
 
-// Cron: run at midnight daily
+// ─── Cron Job: Daily Archive ───────────────────
 cron.schedule('0 0 * * *', archiveNow);
 
-// Manual trigger for testing (POST /api/archive-now)
-// app.post('/api/archive-now', async (req, res) => {
-//  await archiveNow();
-//  res.json({ success: true });
-// });
+// ─── API Routes ────────────────────────────────
 
-// ─── GET all live posts ────────────────────────────────────
-app.get('/api/posts', async (req, res) => {
+// GET: Live posts
+app.get('/api/posts', async (_, res) => {
   await db.read();
   res.json(db.data.posts);
 });
 
-// ─── POST new post ────────────────────────────────────────
+// POST: New post
 app.post('/api/posts', async (req, res) => {
   const { type, text, image, name, mood } = req.body;
   if (!type || (!text && !image)) {
@@ -78,7 +84,7 @@ app.post('/api/posts', async (req, res) => {
   res.status(201).json(post);
 });
 
-// ─── DELETE post (admin only) ─────────────────────────────
+// DELETE: Admin deletes post
 app.delete('/api/posts/:id', async (req, res) => {
   const key = req.header('x-admin-key');
   if (key !== 'scribsyAdmin123') {
@@ -90,28 +96,27 @@ app.delete('/api/posts/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-// ─── GET archived walls ───────────────────────────────────
-app.get('/api/archives', async (req, res) => {
+// GET: Archived past walls
+app.get('/api/archives', async (_, res) => {
   await db.read();
   const archives = Array.isArray(db.data.archives) ? db.data.archives : [];
-  console.log('GET /api/archives →', archives.length, 'entries');
+  console.log('📂 /api/archives →', archives.length, 'entries');
   res.json(archives);
 });
 
-// ——— Manual trigger for Render cron job ———
-app.post('/api/archive-now', async (req, res) => {
-  await archiveNow(); // ← uses your existing function
+// POST: Manual archive trigger (Render cron)
+app.post('/api/archive-now', async (_, res) => {
+  await archiveNow();
   res.json({ success: true });
 });
 
-
-// ─── Health-check endpoint ──────────────────────────────
-app.get('/api/health', (req, res) => {
+// GET: Health check
+app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ─── Start server ─────────────────────────────────────────
+// ─── Start Server ───────────────────────────────
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`🖥 API listening on http://localhost:${PORT}`);
+  console.log(`🖥 API ready at http://localhost:${PORT}`);
 });
