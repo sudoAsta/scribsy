@@ -583,6 +583,14 @@ input[type="text"], select {
   }
 }
 
+@media (max-width: 820px){
+   #wall {
+    column-count: 3;
+    overflow: visible;
+    max-height: none;
+  }
+}
+
 @media (max-width: 768px) {
   body {
     padding: 10px;
