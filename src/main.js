@@ -259,31 +259,55 @@ textArea.addEventListener('input', () => {
 // ————————————————————————————————
 let drawing = false;
 
-canvas.addEventListener('mousedown', e => {
-  if (!canvasReady) return;      // don’t start if not ready
+function startDrawing(x, y) {
   drawing = true;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
   ctx.beginPath();
   ctx.moveTo(x, y);
-});
+}
 
-canvas.addEventListener('mousemove', e => {
-  if (!drawing) return;          // only draw when mouse is down
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+function drawLine(x, y) {
+  if (!drawing) return;
   ctx.lineTo(x, y);
   ctx.stroke();
+}
+
+function stopDrawing() {
+  drawing = false;
+}
+
+function getCanvasCoords(touch) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: (touch.clientX - rect.left) * scaleX,
+    y: (touch.clientY - rect.top) * scaleY
+  };
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', (e) => startDrawing(e.offsetX, e.offsetY));
+canvas.addEventListener('mousemove', (e) => drawLine(e.offsetX, e.offsetY));
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseleave', stopDrawing);
+
+// Touch events (for mobile/tablet)
+canvas.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  const { x, y } = getCanvasCoords(touch);
+  startDrawing(x, y);
 });
 
-canvas.addEventListener('mouseup', () => {
-  drawing = false;
-});
-canvas.addEventListener('mouseleave', () => {
-  drawing = false;
-});
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault(); // prevent page from scrolling
+  const touch = e.touches[0];
+  const { x, y } = getCanvasCoords(touch);
+  drawLine(x, y);
+}, { passive: false });
+
+canvas.addEventListener('touchend', stopDrawing);
+
 
 // ————————————————————————————————
 // 10) SUBMIT HANDLER (Step 5D)

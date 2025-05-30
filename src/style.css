@@ -147,7 +147,9 @@ button {
   column-gap: 16px;
   margin-top: 30px;
   padding-top: 16px;
-  padding-bottom: 16px;
+  padding-bottom: 100px;
+  overflow: visible;
+  max-height: none;
 }
 
 .post-tile,
@@ -593,6 +595,8 @@ input[type="text"], select {
 
   #wall {
     column-count: 1;
+    overflow: visible;
+    max-height: none;
   }
 
   .post-tile,
