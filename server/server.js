@@ -54,7 +54,7 @@ async function archiveNow() {
 }
 
 // ─── Cron Job: Daily Archive ───────────────────
-cron.schedule('0 0 * * *', archiveNow);
+cron.schedule('0 16 * * *', archiveNow);
 
 // ─── API Routes ────────────────────────────────
 
