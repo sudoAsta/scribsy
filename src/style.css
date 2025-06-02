@@ -59,8 +59,8 @@ main#main-content {
 }
 
 .header-left h1 {
-  font-family: 'Georgia', serif;
-  font-size: 24px;
+  font-family: 'Lily Script One', serif;
+  font-size: 32px;
   color: #fff;
   margin: 0;
 }
@@ -167,7 +167,7 @@ button {
   justify-content: space-between;
   background-color: var(--mood-color, #EDD5C0); /* default sugar-cookie */
   border-radius: 5px;
-  color: #874800;               /* dark brown text */
+  color: #782201;               /* dark brown text */
   max-width: 200px;
   width: 100%;
   max-height: 300px;
@@ -224,7 +224,7 @@ button {
 /* Mood-specific overrides */
 .post-mood--Dreamy   { background-color: #6aa3b8; } /* deeper teal */
 .post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
-.post-mood--Sad      { background-color: #92ADA4; } /* Breeze */
+.post-mood--Sad      { background-color: #809D93; } /* Breeze */
 .post-mood--Meh      { background-color: #DFBA70; } /* darker Breeze */
 .post-mood--default  { background-color: #84572F; } /* Saddle brown */
 
@@ -529,14 +529,18 @@ input[type="text"], select {
 
 .footer-left h1 {
   margin: 0 0 5px;
-  font-size: 22px;
+  font-family: "Host Grotesk", sans-serif;
+  font-weight: 800;
+  font-optical-sizing: auto;
+  font-size: 32px;
   color: #fff;
 }
 
 .footer-left p {
-  color: #ccc;
+  font-family: "Host Grotesk", sans-serif;
+  color: #fff;
   margin: 0;
-  font-size: 13px;
+  font-size: 16px;
   opacity: 0.8;
 }
 
