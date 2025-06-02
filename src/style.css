@@ -1,4 +1,4 @@
-/* Scribsy — Clean & Structured CSS */
+/* === Scribsy Stylesheet — Clean & Enhanced === */
 
 /* === Base === */
 html, body {
@@ -14,16 +14,7 @@ body {
   font-family: "Host Grotesk", Arial, sans-serif;
   background-color: #1E1E1E;
   color: #f0f0f0;
-  margin: 0;
   text-align: center;
-}
-
-@keyframes heartbeat {
-  0%   { transform: scale(1); }
-  14%  { transform: scale(1.1); }
-  28%  { transform: scale(1); }
-  42%  { transform: scale(1.1); }
-  70%  { transform: scale(1); }
 }
 
 img {
@@ -32,45 +23,16 @@ img {
   display: block;
 }
 
-/* Make the main area take all space between header & footer */
+@keyframes heartbeat {
+  0%, 28%, 70% { transform: scale(1); }
+  14%, 42% { transform: scale(1.1); }
+}
+
+/* === Layout === */
 main#main-content {
-  flex: 1;                /* from your existing flex layout */
-  overflow-y: auto;       /* enable vertical scrolling */
-  padding: 0 10px;        /* optional side padding */
-}
-
-.post-wrapper {
-  max-height: 300px;      /* cap at 300px tall */
-  overflow-y: auto;       /* let the post scroll internally */
-  break-inside: avoid;
-}
-
-#main-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background-color: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  position: relative;
-  border-bottom: 1px solid #444;
-}
-
-.header-left h1 {
-  font-family: 'Lily Script One', serif;
-  font-size: 32px;
-  color: #fff;
-  margin: 0;
-}
-
-.header-right button {
-  background-color: #fff100;
-  color: #000;
-  padding: 20px;
-  font-size: 14px;
-  border-radius: 50px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px;
 }
 
 main {
@@ -86,8 +48,35 @@ h1 {
   font-size: 1.2rem;
   color: #FFE490;
   opacity: 0.8;
-  text-align: center;
   margin: 40px 0;
+}
+
+/* === Header === */
+#main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #444;
+  background-color: transparent;
+}
+
+.header-left h1 {
+  font-family: 'Lily Script One', serif;
+  font-size: 32px;
+  color: #fff;
+  margin: 0;
+}
+
+.header-right button {
+  background-color: #fff100;
+  color: #000;
+  padding: 20px;
+  font-size: 14px;
+  border-radius: 50px;
 }
 
 /* === Buttons === */
@@ -120,17 +109,15 @@ button {
   border: 2px solid #84572F;
   color: #84572F;
   padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 5px;
   margin-top: 20px;
+  font-size: 14px;
   display: inline-block;
-  width: auto;
 }
 
 #submit-post:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none; /* prevent hover-scale */
+  transform: none;
 }
 
 #char-count {
@@ -138,174 +125,6 @@ button {
   font-size: 0.85rem;
   color: #888;
   margin-top: 4px;
-}
-
-
-/* === Wall Layout === */
-#wall {
-  column-count: 6;
-  column-gap: 16px;
-  margin-top: 30px;
-  padding-top: 16px;
-  padding-bottom: 100px;
-  overflow: visible;
-  max-height: none;
-}
-
-.post-tile,
-#wall img {
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 16px;
-  break-inside: avoid;
-}
-
-/* Post style */
-.post-wrapper {
-  display: inline-block;
-  flex-direction: column;
-  justify-content: space-between;
-  background-color: var(--mood-color, #EDD5C0); /* default sugar-cookie */
-  border-radius: 5px;
-  color: #782201;               /* dark brown text */
-  max-width: 200px;
-  width: 100%;
-  max-height: 300px;
-  margin: 0 0 16px;
-  break-inside: avoid;
-  padding: 20px;
-  box-sizing: border-box;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-  overflow: hidden;
-   /* keep the rotation coming from inline style */
-  transform-origin: center center;
-  transition: transform 0.2s ease;
-}
-
-.post-wrapper img {
-  width: 100%;
-  height: auto;        /* pick a uniform height */
-  object-fit: contain;     /* crop/scale to fill */
-  border-radius: 4px;
-  display: block;
-  margin-bottom: 16px;
-}
-
-.post-text {
-  font-size: 1rem;
-  line-height: 1.4;
-  text-align: left;
-  margin-bottom: 16px;
-  white-space: pre-wrap;
-}
-
-.post-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-}
-
-/* “by Author” styling */
-.post-author {
-  font-size: 0.85rem;
-  color: #333;
-}
-
-/* Mood pill */
-.post-mood {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  color: #fff;
-  white-space: nowrap;
-}
-
-/* Mood-specific overrides */
-.post-mood--Dreamy   { background-color: #6aa3b8; } /* deeper teal */
-.post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
-.post-mood--Sad      { background-color: #809D93; } /* Breeze */
-.post-mood--Meh      { background-color: #DFBA70; } /* darker Breeze */
-.post-mood--default  { background-color: #84572F; } /* Saddle brown */
-
-/* Position the delete button top-right of each tile */
-.post-wrapper {
-  position: relative;  /* ensure absolute children are relative to this */
-}
-
-.post-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(255,255,255,0.8);
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: #874800;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.post-delete:hover {
-  opacity: 1;
-}
-
-/* Hide delete buttons when not in admin-mode */
-body:not(.admin-mode) .post-delete {
-  display: none;
-}
-
-/* Show this only if you add the .show-admin-trigger class in the console */
-body.show-admin-trigger #admin-trigger {
-  display: inline-block;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.post-tile {
-  max-width: 200px;
-  padding: 10px;
-  background-color: #2E2E2E !important;
-  color: #FFD580;
-  border-radius: 5px;
-  word-break: break-word;
-  white-space: pre-line;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-  margin: 10px;
-  transform: rotate(0deg);
-}
-
-/* Initial hidden state for new posts */
-.post-wrapper {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-}
-
-/* When we add .visible, it fades up into place */
-.post-wrapper.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ─── Past Walls: show archived posts immediately ─── */
-.archive-section .post-wrapper {
-  /* Make them fully visible */
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  /* And turn off the transition here */
-  transition: none !important;
 }
 
 /* === Modal === */
@@ -387,7 +206,7 @@ body.show-admin-trigger #admin-trigger {
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid #000; 
+  border-bottom: 1px solid #000;
   margin-bottom: 10px;
 }
 
@@ -397,11 +216,10 @@ body.show-admin-trigger #admin-trigger {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  border-radius: 0%;
 }
 
 .tab-divider {
-  border-right: 1px solid #000; /* Divider line */
+  border-right: 1px solid #000;
 }
 
 .tab:hover {
@@ -417,7 +235,7 @@ textarea, canvas {
   width: 100%;
   border: none;
   border-bottom: 1px solid #000;
-  padding: 20px 20px;
+  padding: 20px;
   font-size: 21px;
   background-color: #fff;
   color: #000;
@@ -435,7 +253,6 @@ textarea:focus {
 canvas {
   height: 300px;
   max-height: 40vh;
-  border-bottom: 1px solid #000;
   cursor: crosshair;
 }
 
@@ -472,40 +289,112 @@ input[type="text"], select {
   background-color: #FFC737;
 }
 
-/* === Gallery === */
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 40px;
-  padding: 0 40px 60px;
-  max-width: 1200px;
-  margin: 0 auto;
+/* === Wall Layout === */
+#wall {
+  column-count: 6;
+  column-gap: 16px;
+  margin-top: 30px;
+  padding: 16px 0 100px;
+  overflow: visible;
 }
 
-.gallery-item {
-  background-color: #2E2E2E;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+.post-wrapper,
+.post-tile,
+#wall img {
+  display: inline-block;
+  break-inside: avoid;
+}
+
+.post-wrapper {
+  position: relative;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--mood-color, #EDD5C0);
+  border-radius: 5px;
+  color: #782201;
+  max-width: 200px;
+  max-height: 300px;
+  margin: 0 0 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transform-origin: center center;
   transition: transform 0.2s ease;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
-.gallery-item:hover {
-  transform: scale(1.02);
+.post-wrapper.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.gallery-item p {
-  margin: 0 0 12px;
+.archive-section .post-wrapper {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+}
+
+.post-text {
+  font-size: 1rem;
+  line-height: 1.4;
+  text-align: left;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.post-author {
   font-size: 0.85rem;
-  color: #FFE490;
+  color: #333;
 }
 
-.gallery-item img {
-  width: 100%;
-  border-radius: 6px;
-  display: block;
+.post-mood {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #fff;
+  white-space: nowrap;
 }
 
+.post-mood--Dreamy   { background-color: #6aa3b8; }
+.post-mood--Happy    { background-color: #E1880F; }
+.post-mood--Sad      { background-color: #809D93; }
+.post-mood--Meh      { background-color: #DFBA70; }
+.post-mood--default  { background-color: #84572F; }
+
+.post-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.8);
+  font-size: 1.1rem;
+  color: #874800;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.post-delete:hover {
+  opacity: 1;
+}
+
+body:not(.admin-mode) .post-delete {
+  display: none;
+}
 
 /* === Footer === */
 #main-footer {
@@ -519,45 +408,38 @@ input[type="text"], select {
   padding: 20px;
   font-size: 13px;
   color: #fff;
-  background-color: transparent;
 }
 
-.footer-left {
-  text-align: left;
+.footer-left, .footer-right {
   max-width: 50%;
 }
 
-.footer-left h1 {
-  margin: 0 0 5px;
-  font-family: "Host Grotesk", sans-serif;
-  font-weight: 800;
-  font-optical-sizing: auto;
-  font-size: 32px;
+.footer-left h1, .footer-left p {
   color: #fff;
+  margin: 0;
 }
 
 .footer-left p {
-  font-family: "Host Grotesk", sans-serif;
-  color: #fff;
-  margin: 0;
   font-size: 16px;
   opacity: 0.8;
 }
 
-#reset-timer {     
-  margin: 0 0 10px;          /* space below before links */
-  text-align: right;         /* right-align in its container */
-} 
+#reset-timer {
+  margin: 0 0 10px;
+  text-align: right;
+}
+
+#reset-timer .reset-label,
+#reset-timer .reset-value {
+  display: block;
+}
 
 #reset-timer .reset-label {
-  display: block;
   font-size: 0.85rem;
   color: #FFE490;
-  margin-bottom: 4px;
 }
 
 #reset-timer .reset-value {
-  display: block;
   font-size: 1.3rem;
   font-weight: 500;
   color: #FFE490;
@@ -588,11 +470,9 @@ input[type="text"], select {
   }
 }
 
-@media (max-width: 820px){
-   #wall {
+@media (max-width: 820px) {
+  #wall {
     column-count: 3;
-    overflow: visible;
-    max-height: none;
   }
 }
 
@@ -608,33 +488,20 @@ input[type="text"], select {
 
   #wall {
     column-count: 1;
-    overflow: visible;
-    max-height: none;
-  }
-
-  .post-tile,
-  img {
-    max-width: 90%;
   }
 
   .post-wrapper {
     padding: 16px;
   }
-  .post-arrow {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-  }
+
   .post-author {
     font-size: 0.8rem;
-    padding: 4px 10px;
   }
 
   #post-modal {
     width: 95%;
     padding: 20px;
     top: 5%;
-    gap: 0px;
   }
 
   textarea,
@@ -658,30 +525,23 @@ input[type="text"], select {
     align-items: flex-start;
   }
 
-  textarea, canvas {
-    width: 100%;
-    min-height: 200px;
-  }
-
   .theme-swatches {
     margin-top: 10px;
   }
 
   #main-footer {
-        flex-direction: column; /* Stack footer content on small screens */
-        align-items: flex-start;
-        padding: 15px;
-      }
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+  }
 
-      .footer-left, .footer-right {
-        max-width: 100%; /* Full width on small screens */
-        padding-right: 0;
-      }
+  .footer-left, .footer-right {
+    max-width: 100%;
+    padding-right: 0;
+  }
 
-      .footer-right {
-        align-items: flex-start; /* Align links to left on mobile */
-        margin-top: 10px;
-      }
+  .footer-right {
+    align-items: flex-start;
+    margin-top: 10px;
+  }
 }
-
- 

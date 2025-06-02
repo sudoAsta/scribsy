@@ -26,3 +26,5 @@ dist-ssr
 
 # Ignore live post data
 server/db.json
+
+firebase-key.json
