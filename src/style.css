@@ -224,6 +224,7 @@ button {
 /* Mood-specific overrides */
 .post-mood--Dreamy   { background-color: #6aa3b8; } /* deeper teal */
 .post-mood--Happy    { background-color: #E1880F; } /* Tuscan Sun */
+.post-mood--Sad      { background-color: #92ADA4; } /* Breeze */
 .post-mood--Meh      { background-color: #DFBA70; } /* darker Breeze */
 .post-mood--default  { background-color: #84572F; } /* Saddle brown */
 
