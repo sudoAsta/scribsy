@@ -629,13 +629,14 @@ input[type="text"], select {
     width: 95%;
     padding: 20px;
     top: 5%;
+    gap: 0px;
   }
 
   textarea,
   input[type="text"],
   #submit-post {
     font-size: 16px;
-    padding: 8px;
+    padding: 16px 20px;
   }
 
   .tabs {
@@ -652,9 +653,9 @@ input[type="text"], select {
     align-items: flex-start;
   }
 
-  canvas {
+  textarea, canvas {
     width: 100%;
-    height: auto;
+    min-height: 200px;
   }
 
   .theme-swatches {
