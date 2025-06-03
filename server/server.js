@@ -1,81 +1,85 @@
-// ─────────────────────────────────────────────────────────────────
-// Scribsy Server (Express + Firebase Firestore)
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Scribsy Server (Express + LowDB + Rate Limit + Admin Auth)
+// ─────────────────────────────────────────────
 
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
+import { Low } from 'lowdb';
+import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
-import admin from 'firebase-admin';
-import fs from 'fs';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 
-// ─── Middleware ───────────────────────────────────────────
+// ─── Middleware ────────────────────────────────
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://scribsy.io',
+    'https://api.scribsy.io'
   ]
 }));
 app.use(express.json());
 
-// ─── Firebase Initialization ─────────────────────────────
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+// ─── Rate Limiting: 20 posts per hour per IP ─────
+const postLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  message: { error: 'Too many posts from this IP. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
-const db = admin.firestore();
-const postsRef = db.collection('posts');
-const archivesRef = db.collection('archives');
+// ─── DB Setup ───────────────────────────────────
+const adapter = new JSONFile('db.json');
+const db = new Low(adapter, { posts: [], archives: [] });
+await db.read();
 
-// ─── Simple Admin Session Store ─────────────────
+// ─── Session Store ──────────────────────────────
 const sessions = new Set();
 
-// ─── Archive Helper ──────────────────────────────
+// ─── Archive Helper ─────────────────────────────
 async function archiveNow() {
-  const snapshot = await postsRef.get();
-  if (snapshot.empty) return;
+  await db.read();
 
-  const posts = [];
-  snapshot.forEach(doc => posts.push(doc.data()));
+  db.data ||= {};
+  db.data.posts ||= [];
+  db.data.archives ||= [];
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
 
-  const existing = await archivesRef.where('date', '>=', today).limit(1).get();
-  if (!existing.empty) {
+  // ✅ Avoid archiving multiple times on same day
+  if (db.data.archives[0]?.date?.startsWith(today)) {
     console.log('⚠️ Already archived today. Skipping.');
     return;
   }
 
-  await archivesRef.add({
-    date: new Date().toISOString(),
-    posts
-  });
-
-  const batch = db.batch();
-  snapshot.forEach(doc => batch.delete(doc.ref));
-  await batch.commit();
-
-  console.log('📦 Archived posts for', today);
+  if (db.data.posts.length) {
+    db.data.archives.unshift({
+      date: now.toISOString(),
+      posts: db.data.posts
+    });
+    db.data.posts = [];
+    await db.write();
+    console.log('📦 Archived posts for', today);
+  }
 }
 
 // ─── Cron Job: Daily Archive ───────────────────
 cron.schedule('0 16 * * *', archiveNow);
 
-// ─── API Routes ──────────────────────────────
+// ─── API Routes ────────────────────────────────
 
 // GET: Live posts
 app.get('/api/posts', async (_, res) => {
-  const snapshot = await postsRef.orderBy('createdAt', 'desc').get();
-  const posts = snapshot.docs.map(doc => doc.data());
-  res.json(posts);
+  await db.read();
+  res.json(db.data.posts);
 });
 
-// POST: New post
-app.post('/api/posts', async (req, res) => {
+// POST: New post (rate-limited)
+app.post('/api/posts', postLimiter, async (req, res) => {
   const { type, text, image, name, mood } = req.body;
   if (!type || (!text && !image)) {
     return res.status(400).json({ error: 'Missing post data' });
@@ -89,12 +93,13 @@ app.post('/api/posts', async (req, res) => {
     mood: mood || 'default',
     createdAt: Date.now()
   };
-  await postsRef.doc(post.id).set(post);
+  db.data.posts.unshift(post);
+  await db.write();
   res.status(201).json(post);
 });
 
-// POST: Admin login
-app.post('/api/admin/login', async (req, res) => {
+// POST: Admin login → returns token
+app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   if (password === 'scribsySuperSecret') {
     const token = nanoid();
@@ -105,21 +110,22 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// DELETE: Admin deletes post
+// DELETE: Admin deletes post (token protected)
 app.delete('/api/posts/:id', async (req, res) => {
   const token = req.header('x-auth-token');
-  if (!sessions.has(token)) {
+  if (!token || !sessions.has(token)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const id = req.params.id;
-  await postsRef.doc(id).delete();
+  db.data.posts = db.data.posts.filter(p => p.id !== id);
+  await db.write();
   res.json({ success: true });
 });
 
 // GET: Archived past walls
 app.get('/api/archives', async (_, res) => {
-  const snapshot = await archivesRef.orderBy('date', 'desc').get();
-  const archives = snapshot.docs.map(doc => doc.data());
+  await db.read();
+  const archives = Array.isArray(db.data.archives) ? db.data.archives : [];
   console.log('📂 /api/archives →', archives.length, 'entries');
   res.json(archives);
 });
@@ -135,7 +141,7 @@ app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ─── Start Server ────────────────────────────────
+// ─── Start Server ───────────────────────────────
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🖥 API ready at http://localhost:${PORT}`);
