@@ -95,9 +95,26 @@ async function archiveNow() {
 cron.schedule('0 16 * * *', archiveNow);
 
 // ───── Routes ─────
+
+// ✅ Patch to ensure all posts have reactions
 app.get('/api/posts', async (_, res) => {
   await db.read();
+  db.data.posts.forEach(p => {
+    p.reactions ||= {}; // ensure compatibility with new UI
+  });
   res.json(db.data.posts);
+});
+
+// ✅ Also patch archives route
+app.get('/api/archives', async (_, res) => {
+  await db.read();
+  const archives = Array.isArray(db.data.archives) ? db.data.archives : [];
+  archives.forEach(entry => {
+    entry.posts.forEach(p => {
+      p.reactions ||= {};
+    });
+  });
+  res.json(archives);
 });
 
 app.post('/api/posts', async (req, res) => {
