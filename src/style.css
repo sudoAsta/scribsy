@@ -531,6 +531,12 @@ body:not(.admin-mode) .post-delete {
   }
 }
 
+@media (max-width: 1200px) {
+  #wall {
+    column-count: 4;
+  }
+}
+
 @media (max-width: 820px) {
   #wall {
     column-count: 3;
