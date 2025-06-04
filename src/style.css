@@ -344,6 +344,9 @@ input[type="text"], select {
   text-align: left;
   margin-bottom: 16px;
   white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .post-footer {

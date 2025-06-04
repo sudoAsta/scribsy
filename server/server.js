@@ -1,130 +1,78 @@
-// Firestore Setup with cert()
+// ─────────────────────────────────────────────
+// Scribsy Server (Express + Firebase + Reactions + Auth)
+// ─────────────────────────────────────────────
+
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
-import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
-import path from 'node:path';
 import rateLimit from 'express-rate-limit';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// ───── Determine Environment ─────
+// ─── Environment ───────────────────────────────
 const isProd = process.env.NODE_ENV === 'production';
+const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
-// ───── DB Setup ─────
-let db;
-if (isProd) {
-  const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-  initializeApp({ credential: cert(creds) });
-  const firestore = getFirestore();
-  db = {
-    async read() {
-      const postsSnap = await firestore.collection('posts').get();
-      const archivesSnap = await firestore.collection('archives').get();
-      this.data = {
-        posts: postsSnap.docs.map(doc => doc.data()),
-        archives: archivesSnap.docs.map(doc => doc.data())
-      };
-    },
-    async write() {
-      const batch = firestore.batch();
-      const postsRef = firestore.collection('posts');
-      const archivesRef = firestore.collection('archives');
+// ─── Firebase Initialization ───────────────────
+initializeApp({ credential: cert(creds) });
+const firestore = getFirestore();
 
-      const oldPosts = await postsRef.get();
-      oldPosts.forEach(doc => batch.delete(doc.ref));
-      this.data.posts.forEach(p => batch.set(postsRef.doc(p.id), p));
+// ─── In-memory Session for Admin Tokens ────────
+const sessions = new Set();
 
-      const oldArchives = await archivesRef.get();
-      oldArchives.forEach(doc => batch.delete(doc.ref));
-      this.data.archives.forEach(a => batch.set(archivesRef.doc(), a));
-
-      await batch.commit();
-    },
-    data: { posts: [], archives: [] }
-  };
-} else {
-  const adapter = new JSONFile(path.resolve('../db.json'));
-  db = new Low(adapter, { posts: [], archives: [] });
-  await db.read();
-}
-
-// ───── App Init ─────
+// ─── Express Init ──────────────────────────────
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://scribsy.io']
+  origin: [
+    'http://localhost:5173',
+    'https://scribsy.io',
+    'https://api.scribsy.io'
+  ]
 }));
 app.use(express.json());
 
-// ───── Rate Limit ─────
-app.use('/api/', rateLimit({
-  windowMs: 10 * 1000,
-  max: 10,
-  message: 'Too many requests — please slow down!'
-}));
+// ─── Rate Limit: 20 posts per hour per IP ──────
+const postLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many posts from this IP. Please try again later.' }
+});
 
-// ───── Archive Helper ─────
+// ─── Archive Helper ─────────────────────────────
 async function archiveNow() {
-  await db.read();
-  db.data ||= {};
-  db.data.posts ||= [];
-  db.data.archives ||= [];
-
   const now = new Date();
   const today = now.toISOString().split('T')[0];
 
-  if (db.data.archives[0]?.date?.startsWith(today)) {
-    console.log('⚠️ Already archived today.');
-    return;
-  }
+  const archiveSnap = await firestore.collection('archives')
+    .orderBy('date', 'desc').limit(1).get();
 
-  if (db.data.posts.length) {
-    db.data.archives.unshift({
-      date: now.toISOString(),
-      posts: db.data.posts
-    });
-    db.data.posts = [];
-    await db.write();
-    console.log('📦 Archived posts for', today);
-  }
+  const alreadyArchived = archiveSnap.docs[0]?.data()?.date?.startsWith(today);
+  if (alreadyArchived) return console.log('⚠️ Already archived today.');
+
+  const postsSnap = await firestore.collection('posts').get();
+  if (postsSnap.empty) return;
+
+  const posts = postsSnap.docs.map(doc => doc.data());
+  await firestore.collection('archives').add({ date: now.toISOString(), posts });
+
+  const batch = firestore.batch();
+  postsSnap.docs.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+  console.log('📦 Archived posts for', today);
 }
+
 cron.schedule('0 16 * * *', archiveNow);
 
-// ───── Routes ─────
+// ─── API Routes ────────────────────────────────
 
-// ✅ Safer patch to avoid 500 errors on live
 app.get('/api/posts', async (_, res) => {
-  await db.read();
-  db.data ||= {};
-  db.data.posts ||= [];
-
-  db.data.posts.forEach(p => {
-    p.reactions ||= {};
-  });
-
-  res.json(db.data.posts);
+  const snap = await firestore.collection('posts').orderBy('createdAt', 'desc').get();
+  const posts = snap.docs.map(doc => ({ reactions: {}, ...doc.data() }));
+  res.json(posts);
 });
 
-// ✅ Safer archive patch
-app.get('/api/archives', async (_, res) => {
-  await db.read();
-  db.data ||= {};
-  db.data.archives ||= [];
-
-  db.data.archives.forEach(entry => {
-    entry.posts ||= [];
-    entry.posts.forEach(p => {
-      p.reactions ||= {};
-    });
-  });
-
-  res.json(db.data.archives);
-});
-
-
-app.post('/api/posts', async (req, res) => {
+app.post('/api/posts', postLimiter, async (req, res) => {
   const { type, text, image, name, mood } = req.body;
   if (!type || (!text && !image)) {
     return res.status(400).json({ error: 'Missing post data' });
@@ -137,27 +85,41 @@ app.post('/api/posts', async (req, res) => {
     name: name || 'Anonymous',
     mood: mood || 'default',
     createdAt: Date.now(),
-    reactions: {} // 👈 initialize reactions here
+    reactions: {}
   };
-  db.data.posts.unshift(post);
-  await db.write();
+  await firestore.collection('posts').doc(post.id).set(post);
   res.status(201).json(post);
 });
 
 app.delete('/api/posts/:id', async (req, res) => {
-  const key = req.header('x-admin-key');
-  if (key !== 'scribsyAdmin123') {
+  const token = req.header('x-auth-token');
+  if (!token || !sessions.has(token)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const id = req.params.id;
-  db.data.posts = db.data.posts.filter(p => p.id !== id);
-  await db.write();
+  await firestore.collection('posts').doc(req.params.id).delete();
   res.json({ success: true });
 });
 
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password === 'scribsySuperSecret') {
+    const token = nanoid();
+    sessions.add(token);
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
 app.get('/api/archives', async (_, res) => {
-  await db.read();
-  const archives = Array.isArray(db.data.archives) ? db.data.archives : [];
+  const snap = await firestore.collection('archives').orderBy('date', 'desc').get();
+  const archives = snap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      posts: (data.posts || []).map(p => ({ reactions: {}, ...p }))
+    };
+  });
   res.json(archives);
 });
 
@@ -166,31 +128,26 @@ app.post('/api/archive-now', async (_, res) => {
   res.json({ success: true });
 });
 
-// POST: React to a post
 app.post('/api/posts/:id/react', async (req, res) => {
   const { emoji } = req.body;
   const { id } = req.params;
-
   if (!emoji || typeof emoji !== 'string') {
     return res.status(400).json({ error: 'Invalid emoji' });
   }
-
-  await db.read();
-  const post = db.data.posts.find(p => p.id === id);
-  if (!post) return res.status(404).json({ error: 'Post not found' });
-
-  post.reactions ||= {};
-  post.reactions[emoji] = (post.reactions[emoji] || 0) + 1;
-
-  await db.write();
-  res.json({ success: true, reactions: post.reactions });
+  const ref = firestore.collection('posts').doc(id);
+  const doc = await ref.get();
+  if (!doc.exists) return res.status(404).json({ error: 'Post not found' });
+  const data = doc.data();
+  data.reactions ||= {};
+  data.reactions[emoji] = (data.reactions[emoji] || 0) + 1;
+  await ref.set(data);
+  res.json({ success: true, reactions: data.reactions });
 });
 
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ───── Start ─────
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🖥 API ready at http://localhost:${PORT}`);
