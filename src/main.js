@@ -1,11 +1,13 @@
 // src/main.js
 
-// Import styles
 import './style.css';
 
-// Define API base URL from environment variable
-const API = import.meta.env.VITE_API_URL;
-let isAdmin = false; // Track admin state
+// ✅ Auto-detect local or live API URL
+const API = window.location.hostname.includes('localhost')
+  ? 'http://localhost:4000'
+  : 'https://api.scribsy.io';
+
+let isAdmin = false;
 
 // Admin login: prompt for password, send to server, store token if valid
 async function askForAdmin() {
@@ -82,15 +84,16 @@ function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
 
-// Render a post onto the wall
+// ✅ Updated renderPost with reaction tray + live update
 function renderPost(post, prepend = false) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('post-wrapper');
   wrapper.dataset.id = post.id;
   wrapper.style.backgroundColor = getMoodColor(post.mood);
   wrapper.style.transform = `rotate(${randomRotation()}deg)`;
+  wrapper.style.overflow = 'visible';
+  wrapper.style.position = 'relative';
 
-  // Text or image content
   if (post.type === 'text') {
     const txt = document.createElement('div');
     txt.className = 'post-text';
@@ -103,7 +106,6 @@ function renderPost(post, prepend = false) {
     wrapper.append(img);
   }
 
-  // Footer with author and mood tag
   const footer = document.createElement('div');
   footer.className = 'post-footer';
   const author = document.createElement('span');
@@ -115,14 +117,57 @@ function renderPost(post, prepend = false) {
   footer.append(author, pill);
   wrapper.append(footer);
 
-  // Only add delete button if admin
-  if (isAdmin) addDeleteButton(wrapper);
+  // === Reaction Count Bar ===
+  const countBar = document.createElement('div');
+  countBar.className = 'reaction-count-bar';
+  wrapper.append(countBar);
 
-  // Insert post in correct order
+  function updateReactionCounts(reactions) {
+    countBar.innerHTML = ''; // clear
+    Object.entries(reactions).forEach(([emoji, count]) => {
+      if (count > 0) {
+        const pill = document.createElement('div');
+        pill.className = 'reaction-pill';
+        pill.innerHTML = `${emoji} <span>${count}</span>`;
+        countBar.append(pill);
+      }
+    });
+  }
+
+  if (post.reactions) updateReactionCounts(post.reactions);
+
+  // === Tray Hover ===
+  const tray = document.createElement('div');
+  tray.className = 'reaction-tray';
+  const emojis = ['🔥','❤️','😂','😢','😡','💩'];
+
+  emojis.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.className = 'reaction-emoji';
+    btn.textContent = emoji;
+
+    btn.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${API}/api/posts/${post.id}/react`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emoji })
+        });
+        const data = await res.json();
+        if (data.reactions) updateReactionCounts(data.reactions);
+      } catch (err) {
+        console.error('Reaction error:', err);
+      }
+    });
+
+    tray.append(btn);
+  });
+
+  wrapper.append(tray);
+
+  if (isAdmin) addDeleteButton(wrapper);
   if (prepend) wall.prepend(wrapper);
   else wall.append(wrapper);
-
-  // Animate appearance
   requestAnimationFrame(() => wrapper.classList.add('visible'));
 }
 
@@ -152,6 +197,7 @@ function getMoodColor(mood) {
     case 'Happy':  return '#F1A805';
     case 'Sad':    return '#92ADA4';
     case 'Meh':    return '#F2D6A1';
+    case 'Rant':   return '#F36949';
     default:       return '#EDD5C0';
   }
 }

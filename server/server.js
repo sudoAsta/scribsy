@@ -1,88 +1,106 @@
-// ─────────────────────────────────────────────
-// Scribsy Server (Express + Firestore + Auth + Rate Limit)
-// ─────────────────────────────────────────────
+// server/server.js
 
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
-import admin from 'firebase-admin';
+import { Low } from 'lowdb';
+import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
-import fs from 'fs';
+import path from 'node:path';
 import rateLimit from 'express-rate-limit';
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
+// ───── Determine Environment ─────
+const isProd = process.env.NODE_ENV === 'production';
+
+// ───── DB Setup ─────
+let db;
+if (isProd) {
+  initializeApp({ credential: applicationDefault() });
+  const firestore = getFirestore();
+  db = {
+    async read() {
+      const postsSnap = await firestore.collection('posts').get();
+      const archivesSnap = await firestore.collection('archives').get();
+
+      this.data = {
+        posts: postsSnap.docs.map(doc => doc.data()),
+        archives: archivesSnap.docs.map(doc => doc.data())
+      };
+    },
+    async write() {
+      const batch = firestore.batch();
+      const postsRef = firestore.collection('posts');
+      const archivesRef = firestore.collection('archives');
+
+      // Clear and re-write
+      const oldPosts = await postsRef.get();
+      oldPosts.forEach(doc => batch.delete(doc.ref));
+      this.data.posts.forEach(p => batch.set(postsRef.doc(p.id), p));
+
+      const oldArchives = await archivesRef.get();
+      oldArchives.forEach(doc => batch.delete(doc.ref));
+      this.data.archives.forEach(a => batch.set(archivesRef.doc(), a));
+
+      await batch.commit();
+    },
+    data: { posts: [], archives: [] }
+  };
+} else {
+  const adapter = new JSONFile(path.resolve('../db.json'));
+  db = new Low(adapter, { posts: [], archives: [] });
+  await db.read();
+}
+
+// ───── App Init ─────
 const app = express();
-
-// ─── Middleware ────────────────────────────────
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://scribsy.io',
-    'https://api.scribsy.io'
-  ]
+  origin: ['http://localhost:5173', 'https://scribsy.io']
 }));
 app.use(express.json());
 
-// ─── Rate Limiting: 20 posts per hour per IP ─────
-const postLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20,
-  message: { error: 'Too many posts from this IP. Please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false
-});
+// ───── Rate Limit ─────
+app.use('/api/', rateLimit({
+  windowMs: 10 * 1000,
+  max: 10,
+  message: 'Too many requests — please slow down!'
+}));
 
-// ─── Firebase Initialization ─────────────────────
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-const db = admin.firestore();
-const postsRef = db.collection('posts');
-const archivesRef = db.collection('archives');
-
-const sessions = new Set();
-
-// ─── Archive Helper ─────────────────────────────
+// ───── Archive Helper ─────
 async function archiveNow() {
-  const snapshot = await postsRef.get();
-  if (snapshot.empty) return;
+  await db.read();
+  db.data ||= {};
+  db.data.posts ||= [];
+  db.data.archives ||= [];
 
-  const posts = [];
-  snapshot.forEach(doc => posts.push(doc.data()));
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
 
-  const today = new Date().toISOString().split('T')[0];
-  const existing = await archivesRef.where('date', '>=', today).limit(1).get();
-  if (!existing.empty) {
-    console.log('⚠️ Already archived today. Skipping.');
+  if (db.data.archives[0]?.date?.startsWith(today)) {
+    console.log('⚠️ Already archived today.');
     return;
   }
 
-  await archivesRef.add({
-    date: new Date().toISOString(),
-    posts
-  });
-
-  const batch = db.batch();
-  snapshot.forEach(doc => batch.delete(doc.ref));
-  await batch.commit();
-
-  console.log('📦 Archived posts for', today);
+  if (db.data.posts.length) {
+    db.data.archives.unshift({
+      date: now.toISOString(),
+      posts: db.data.posts
+    });
+    db.data.posts = [];
+    await db.write();
+    console.log('📦 Archived posts for', today);
+  }
 }
-
-// ─── Cron Job: Daily Archive ───────────────────
 cron.schedule('0 16 * * *', archiveNow);
 
-// ─── API Routes ────────────────────────────────
-
-// GET: Live posts
+// ───── Routes ─────
 app.get('/api/posts', async (_, res) => {
-  const snapshot = await postsRef.orderBy('createdAt', 'desc').get();
-  const posts = snapshot.docs.map(doc => doc.data());
-  res.json(posts);
+  await db.read();
+  res.json(db.data.posts);
 });
 
-// POST: New post (rate-limited)
-app.post('/api/posts', postLimiter, async (req, res) => {
+app.post('/api/posts', async (req, res) => {
   const { type, text, image, name, mood } = req.body;
   if (!type || (!text && !image)) {
     return res.status(400).json({ error: 'Missing post data' });
@@ -94,55 +112,61 @@ app.post('/api/posts', postLimiter, async (req, res) => {
     image: image || null,
     name: name || 'Anonymous',
     mood: mood || 'default',
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    reactions: {} // 👈 initialize reactions here
   };
-  await postsRef.doc(post.id).set(post);
+  db.data.posts.unshift(post);
+  await db.write();
   res.status(201).json(post);
 });
 
-// POST: Admin login → returns token
-app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body;
-  if (password === 'scribsySuperSecret') {
-    const token = nanoid();
-    sessions.add(token);
-    res.json({ token });
-  } else {
-    res.status(401).json({ error: 'Invalid password' });
-  }
-});
-
-// DELETE: Admin deletes post (token protected)
 app.delete('/api/posts/:id', async (req, res) => {
-  const token = req.header('x-auth-token');
-  if (!token || !sessions.has(token)) {
+  const key = req.header('x-admin-key');
+  if (key !== 'scribsyAdmin123') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const id = req.params.id;
-  await postsRef.doc(id).delete();
+  db.data.posts = db.data.posts.filter(p => p.id !== id);
+  await db.write();
   res.json({ success: true });
 });
 
-// GET: Archived past walls
 app.get('/api/archives', async (_, res) => {
-  const snapshot = await archivesRef.orderBy('date', 'desc').get();
-  const archives = snapshot.docs.map(doc => doc.data());
-  console.log('📂 /api/archives →', archives.length, 'entries');
+  await db.read();
+  const archives = Array.isArray(db.data.archives) ? db.data.archives : [];
   res.json(archives);
 });
 
-// POST: Manual archive trigger (Render cron)
 app.post('/api/archive-now', async (_, res) => {
   await archiveNow();
   res.json({ success: true });
 });
 
-// GET: Health check
+// POST: React to a post
+app.post('/api/posts/:id/react', async (req, res) => {
+  const { emoji } = req.body;
+  const { id } = req.params;
+
+  if (!emoji || typeof emoji !== 'string') {
+    return res.status(400).json({ error: 'Invalid emoji' });
+  }
+
+  await db.read();
+  const post = db.data.posts.find(p => p.id === id);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+
+  post.reactions ||= {};
+  post.reactions[emoji] = (post.reactions[emoji] || 0) + 1;
+
+  await db.write();
+  res.json({ success: true, reactions: post.reactions });
+});
+
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ─── Start Server ───────────────────────────────
+// ───── Start ─────
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🖥 API ready at http://localhost:${PORT}`);

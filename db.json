@@ -1,4 +1,42 @@
 {
-  "posts": [],
+  "posts": [
+    {
+      "id": "vEMm6ksz8WaMyOup5oghb",
+      "type": "text",
+      "text": "4",
+      "image": null,
+      "name": "Anonymous",
+      "mood": "default",
+      "createdAt": 1748967035590
+    },
+    {
+      "id": "dBMNOcVscFE8paaXGnpDF",
+      "type": "text",
+      "text": "test3",
+      "image": null,
+      "name": "Anonymous",
+      "mood": "default",
+      "createdAt": 1748966944733,
+      "reactions": {}
+    },
+    {
+      "id": "Ez1fUqLM_se2B89YrcRdA",
+      "type": "text",
+      "text": "emoji test",
+      "image": null,
+      "name": "Anonymous",
+      "mood": "default",
+      "createdAt": 1748966336184
+    },
+    {
+      "id": "esi-nZOiipMj5o4DTtB5_",
+      "type": "text",
+      "text": "hello test",
+      "image": null,
+      "name": "Anonymous",
+      "mood": "default",
+      "createdAt": 1748963714552
+    }
+  ],
   "archives": []
 }
