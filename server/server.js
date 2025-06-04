@@ -17,7 +17,11 @@ const isProd = process.env.NODE_ENV === 'production';
 // ───── DB Setup ─────
 let db;
 if (isProd) {
-  initializeApp({ credential: applicationDefault() });
+  import { initializeApp, cert } from 'firebase-admin/app';
+  
+  const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+  initializeApp({ credential: cert(creds) });
+
   const firestore = getFirestore();
   db = {
     async read() {
