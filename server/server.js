@@ -1,5 +1,4 @@
-// server/server.js
-
+// Firestore Setup with cert()
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
@@ -8,7 +7,7 @@ import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
 import path from 'node:path';
 import rateLimit from 'express-rate-limit';
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
+import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // ───── Determine Environment ─────
@@ -17,17 +16,13 @@ const isProd = process.env.NODE_ENV === 'production';
 // ───── DB Setup ─────
 let db;
 if (isProd) {
-  import { initializeApp, cert } from 'firebase-admin/app';
-  
   const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
   initializeApp({ credential: cert(creds) });
-
   const firestore = getFirestore();
   db = {
     async read() {
       const postsSnap = await firestore.collection('posts').get();
       const archivesSnap = await firestore.collection('archives').get();
-
       this.data = {
         posts: postsSnap.docs.map(doc => doc.data()),
         archives: archivesSnap.docs.map(doc => doc.data())
@@ -38,7 +33,6 @@ if (isProd) {
       const postsRef = firestore.collection('posts');
       const archivesRef = firestore.collection('archives');
 
-      // Clear and re-write
       const oldPosts = await postsRef.get();
       oldPosts.forEach(doc => batch.delete(doc.ref));
       this.data.posts.forEach(p => batch.set(postsRef.doc(p.id), p));
