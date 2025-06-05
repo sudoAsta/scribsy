@@ -26,9 +26,9 @@ async function loadArchives() {
 }
 
 // ─── Kick things off on DOM ready ───────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+/* window.addEventListener('DOMContentLoaded', () => {
   loadArchives();
-});
+}); */
 
 
 // ─── Mood-color helper (keep in sync with main.js) ─────────
