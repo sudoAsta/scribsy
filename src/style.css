@@ -637,21 +637,23 @@ body:not(.admin-mode) .post-delete {
 @media (max-width: 600px) {
   .reaction-tray {
     top: auto;
-    bottom: -10px;
-    left: 70%;
-    transform: translateX(-50%) translateY(10px);
+    bottom: 8px;
+    left: auto;
+    right: 12px;
+    transform: translateY(10px);
     flex-direction: column;
     padding: 8px;
     border-radius: 12px;
+    align-items: flex-end;
   }
 
-  .reaction-emoji {
+  /* .reaction-emoji {
     font-size: 22px;
     padding: 6px;
-  }
+  } */
 
   .post-wrapper:hover .reaction-tray {
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 

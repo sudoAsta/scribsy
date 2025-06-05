@@ -164,9 +164,10 @@ function renderPost(post, prepend = false) {
 
   wrapper.append(tray);
 
-  // 👇 Tap once to toggle tray (mobile friendly)
-  /* wrapper.addEventListener('click', (e) => {
-    if (e.target.closest('.reaction-emoji')) return; // skip if tapping a button
+// 📱 Mobile: tap to toggle tray
+if (window.innerWidth <= 600) {
+  wrapper.addEventListener('click', (e) => {
+    if (e.target.closest('.reaction-emoji')) return;
     document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show'));
     tray.classList.add('show');
     e.stopPropagation();
@@ -174,7 +175,8 @@ function renderPost(post, prepend = false) {
 
   document.addEventListener('click', () => {
     tray.classList.remove('show');
-  }, { once: true }); */
+  }, { once: true });
+}
 
   if (isAdmin) addDeleteButton(wrapper);
   if (prepend) wall.prepend(wrapper);
