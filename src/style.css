@@ -462,10 +462,10 @@ body:not(.admin-mode) .post-delete {
   color: #000;
   padding: 3px 8px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
