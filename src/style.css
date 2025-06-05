@@ -415,8 +415,8 @@ body:not(.admin-mode) .post-delete {
 /* === Reaction Tray === */
 .reaction-tray {
   position: absolute;
-  top: -38px;
-  left: 10%;
+  top: -30px;
+  left: 50%;
   transform: translateX(-50%) translateY(-10px);
   background: #fff;
   padding: 6px 12px;
@@ -638,7 +638,7 @@ body:not(.admin-mode) .post-delete {
   .reaction-tray {
     top: auto;
     bottom: -10px;
-    left: 50%;
+    left: 70%;
     transform: translateX(-50%) translateY(10px);
     flex-direction: column;
     padding: 8px;
