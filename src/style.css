@@ -645,6 +645,7 @@ body:not(.admin-mode) .post-delete {
     padding: 8px;
     border-radius: 12px;
     align-items: flex-end;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
   /* .reaction-emoji {
@@ -655,5 +656,11 @@ body:not(.admin-mode) .post-delete {
   .post-wrapper:hover .reaction-tray {
     transform: translateY(0);
   }
+  
+  .reaction-tray.hide {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
 }
 

@@ -166,20 +166,33 @@ function renderPost(post, prepend = false) {
 
 // 📱 Mobile: tap to toggle tray
 if (window.innerWidth <= 600) {
+  let autoHideTimer = null;
+
   wrapper.addEventListener('click', (e) => {
     if (e.target.closest('.reaction-emoji')) return;
+
+    // Close all trays
     document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show'));
     tray.classList.add('show');
+    tray.classList.remove('hide');
     e.stopPropagation();
 
-    // ⏱️ Auto-hide after 4 seconds
-    setTimeout(() => {
+    // Auto-hide tray after 4s with fade-slide
+    clearTimeout(autoHideTimer);
+    autoHideTimer = setTimeout(() => {
       tray.classList.remove('show');
+      tray.classList.add('hide');
+
+      setTimeout(() => {
+        tray.classList.remove('hide');
+      }, 500); // match transition
     }, 4000);
   });
 
   document.addEventListener('click', () => {
     tray.classList.remove('show');
+    tray.classList.add('hide');
+    clearTimeout(autoHideTimer);
   }, { once: true });
 }
 
