@@ -36,7 +36,9 @@ function getMoodColor(mood) {
   switch (mood) {
     case 'Dreamy': return '#B3D9E0';
     case 'Happy':  return '#F1A805';
-    case 'Meh':    return '#658A7F';
+    case 'Sad':    return '#92ADA4';
+    case 'Meh':    return '#F2D6A1';
+    case 'Rant':   return '#F36949';
     default:       return '#EDD5C0';
   }
 }

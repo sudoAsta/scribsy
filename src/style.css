@@ -556,11 +556,12 @@ body:not(.admin-mode) .post-delete {
   }
 
   #wall {
-    column-count: 1;
+    column-count: 2;
   }
 
   .post-wrapper {
     padding: 16px;
+    transform: rotate(0deg) !important;
   }
 
   .post-author {
