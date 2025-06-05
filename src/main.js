@@ -171,6 +171,11 @@ if (window.innerWidth <= 600) {
     document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show'));
     tray.classList.add('show');
     e.stopPropagation();
+
+    // ⏱️ Auto-hide after 4 seconds
+    setTimeout(() => {
+      tray.classList.remove('show');
+    }, 4000);
   });
 
   document.addEventListener('click', () => {
