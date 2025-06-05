@@ -415,31 +415,24 @@ body:not(.admin-mode) .post-delete {
 /* === Reaction Tray === */
 .reaction-tray {
   position: absolute;
-  top: -32px;
-  left: 50%;
-
+  top: -38px;
+  left: 10%;
+  transform: translateX(-50%) translateY(-10px);
   background: #fff;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   display: flex;
-  gap: 8px;
+  gap: 10px;
   opacity: 0;
   pointer-events: none;
-  transform: translateX(-50%);
-  transform: translateY(-10px);
   transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 10;
 }
 
-.reaction-tray.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
 .post-wrapper:hover .reaction-tray {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 
@@ -640,28 +633,25 @@ body:not(.admin-mode) .post-delete {
   }
 }
 
+/* === Mobile: vertical layout tray === */
 @media (max-width: 600px) {
   .reaction-tray {
-    top: -24px;
-    padding: 6px 12px;
-    gap: 10px;
-    border-radius: 16px;
-    font-size: 20px;
+    top: auto;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    flex-direction: column;
+    padding: 8px;
+    border-radius: 12px;
   }
 
   .reaction-emoji {
-    font-size: 24px; /* Bigger for thumbs */
+    font-size: 22px;
     padding: 6px;
   }
 
-  .reaction-count-bar {
-    gap: 4px 6px;
-    font-size: 14px;
-  }
-
-  .reaction-pill {
-    font-size: 13px;
-    padding: 2px 6px;
+  .post-wrapper:hover .reaction-tray {
+    transform: translateX(-50%) translateY(0);
   }
 }
 
