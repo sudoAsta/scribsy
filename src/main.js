@@ -84,7 +84,7 @@ function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
 
-// ✅ Updated renderPost with reaction tray + live update
+// ✅ Mobile-friendly reaction tray
 function renderPost(post, prepend = false) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('post-wrapper');
@@ -117,13 +117,12 @@ function renderPost(post, prepend = false) {
   footer.append(author, pill);
   wrapper.append(footer);
 
-  // === Reaction Count Bar ===
   const countBar = document.createElement('div');
   countBar.className = 'reaction-count-bar';
   wrapper.append(countBar);
 
   function updateReactionCounts(reactions) {
-    countBar.innerHTML = ''; // clear
+    countBar.innerHTML = '';
     Object.entries(reactions).forEach(([emoji, count]) => {
       if (count > 0) {
         const pill = document.createElement('div');
@@ -136,7 +135,6 @@ function renderPost(post, prepend = false) {
 
   if (post.reactions) updateReactionCounts(post.reactions);
 
-  // === Tray Hover ===
   const tray = document.createElement('div');
   tray.className = 'reaction-tray';
   const emojis = ['🔥','❤️','😂','😢','😡','💩'];
@@ -155,6 +153,7 @@ function renderPost(post, prepend = false) {
         });
         const data = await res.json();
         if (data.reactions) updateReactionCounts(data.reactions);
+        tray.classList.remove('show');
       } catch (err) {
         console.error('Reaction error:', err);
       }
@@ -164,6 +163,18 @@ function renderPost(post, prepend = false) {
   });
 
   wrapper.append(tray);
+
+  // 👇 Tap once to toggle tray (mobile friendly)
+  wrapper.addEventListener('click', (e) => {
+    if (e.target.closest('.reaction-emoji')) return; // skip if tapping a button
+    document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show'));
+    tray.classList.add('show');
+    e.stopPropagation();
+  });
+
+  document.addEventListener('click', () => {
+    tray.classList.remove('show');
+  }, { once: true });
 
   if (isAdmin) addDeleteButton(wrapper);
   if (prepend) wall.prepend(wrapper);

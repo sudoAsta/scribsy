@@ -28,6 +28,17 @@ img {
   14%, 42% { transform: scale(1.1); }
 }
 
+@keyframes slideFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* === Layout === */
 main#main-content {
   flex: 1;
@@ -406,7 +417,7 @@ body:not(.admin-mode) .post-delete {
   position: absolute;
   top: -32px;
   left: 50%;
-  transform: translateX(-50%);
+
   background: #fff;
   padding: 6px 10px;
   border-radius: 20px;
@@ -415,8 +426,16 @@ body:not(.admin-mode) .post-delete {
   gap: 8px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transform: translateX(-50%);
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 10;
+}
+
+.reaction-tray.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .post-wrapper:hover .reaction-tray {
@@ -562,6 +581,7 @@ body:not(.admin-mode) .post-delete {
   .post-wrapper {
     padding: 16px;
     transform: rotate(0deg) !important;
+    animation: slideFadeUp 0.5s ease-out;
   }
 
   .post-author {
@@ -619,3 +639,29 @@ body:not(.admin-mode) .post-delete {
     margin-top: 10px;
   }
 }
+
+@media (max-width: 600px) {
+  .reaction-tray {
+    top: -24px;
+    padding: 6px 12px;
+    gap: 10px;
+    border-radius: 16px;
+    font-size: 20px;
+  }
+
+  .reaction-emoji {
+    font-size: 24px; /* Bigger for thumbs */
+    padding: 6px;
+  }
+
+  .reaction-count-bar {
+    gap: 4px 6px;
+    font-size: 14px;
+  }
+
+  .reaction-pill {
+    font-size: 13px;
+    padding: 2px 6px;
+  }
+}
+
