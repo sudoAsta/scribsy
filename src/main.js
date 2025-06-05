@@ -171,28 +171,40 @@ if (window.innerWidth <= 600) {
   wrapper.addEventListener('click', (e) => {
     if (e.target.closest('.reaction-emoji')) return;
 
-    // Close all trays
-    document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show'));
+    // Close all other trays
+    document.querySelectorAll('.reaction-tray.show').forEach(t => {
+      t.classList.remove('show');
+      t.classList.remove('hide');
+    });
+
     tray.classList.add('show');
     tray.classList.remove('hide');
     e.stopPropagation();
 
-    // Auto-hide tray after 4s with fade-slide
-    clearTimeout(autoHideTimer);
+    // Clear any previous timer
+    if (autoHideTimer) clearTimeout(autoHideTimer);
+
+    // ⏱️ Set auto-hide after 4s
     autoHideTimer = setTimeout(() => {
       tray.classList.remove('show');
       tray.classList.add('hide');
 
+      // Cleanup hide class after animation ends
       setTimeout(() => {
         tray.classList.remove('hide');
-      }, 500); // match transition
+      }, 500);
     }, 4000);
   });
 
+  // Tap outside to close immediately
   document.addEventListener('click', () => {
     tray.classList.remove('show');
     tray.classList.add('hide');
-    clearTimeout(autoHideTimer);
+    if (autoHideTimer) clearTimeout(autoHideTimer);
+
+    setTimeout(() => {
+      tray.classList.remove('hide');
+    }, 500);
   }, { once: true });
 }
 
