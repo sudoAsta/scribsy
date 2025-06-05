@@ -651,12 +651,12 @@ body:not(.admin-mode) .post-delete {
   /* .reaction-emoji {
     font-size: 22px;
     padding: 6px;
-  } */
+  } 
 
   .post-wrapper:hover .reaction-tray {
     transform: translateY(0);
-  }
-  
+  }*/
+
   .reaction-tray.hide {
   opacity: 0;
   transform: translateY(20px);
