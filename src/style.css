@@ -302,8 +302,11 @@ input[type="text"], select {
 
 /* === Wall Layout === */
 #wall {
+  display: flex;
+  flex-wrap: wrap;
   column-count: 6;
-  column-gap: 16px;
+  justify-content: flex-start;
+  gap: 16px;
   margin-top: 30px;
   padding: 16px 0 100px;
   overflow: visible !important;
