@@ -302,11 +302,8 @@ input[type="text"], select {
 
 /* === Wall Layout === */
 #wall {
-  display: flex;
-  flex-wrap: wrap;
   column-count: 6;
-  justify-content: flex-start;
-  gap: 16px;
+  column-gap: 16px;
   margin-top: 30px;
   padding: 16px 0 100px;
   overflow: visible !important;
@@ -339,6 +336,7 @@ input[type="text"], select {
   transform: translateY(10px);
   transition: opacity 0.4s ease-out, transform 0.4s ease-out;
   pointer-events: auto;
+  break-inside: avoid;
 }
 
 .post-wrapper.visible {
