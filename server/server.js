@@ -62,7 +62,7 @@ async function archiveNow() {
   console.log('📦 Archived posts for', today);
 }
 
-cron.schedule('0 16 * * *', archiveNow);
+cron.schedule('0 16 * * 0', archiveNow);
 
 // ─── API Routes ────────────────────────────────
 

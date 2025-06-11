@@ -64,16 +64,30 @@ const MAX_POSTS = 10;
 // Update countdown timer to next reset (midnight)
 function updateCountdown() {
   const now = new Date();
-  const next = new Date(now);
-  next.setHours(24, 0, 0, 0);
-  const diff = next - now;
+
+  // Find next Sunday 16:00 UTC (Monday 00:00 PH time)
+  const day = now.getUTCDay(); // Sunday = 0
+  const daysUntilSunday = (7 - day) % 7;
+
+  const nextReset = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + daysUntilSunday,
+    16, 0, 0 // 16:00 UTC = 00:00 PH
+  ));
+
+  const diff = nextReset - now;
   if (diff <= 0) {
-    document.querySelector('#reset-timer .reset-value').textContent = '0h 0m';
+    document.querySelector('#reset-timer .reset-value').textContent = '0d 0h 0m';
     return;
   }
-  const hrs = Math.floor(diff / (1000 * 60 * 60));
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  document.querySelector('#reset-timer .reset-value').textContent = `${hrs}h ${mins}m`;
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const mins = Math.floor((diff / (1000 * 60)) % 60);
+
+  document.querySelector('#reset-timer .reset-value').textContent =
+    `${days}d ${hours}h ${mins}m`;
 }
 
 updateCountdown();
