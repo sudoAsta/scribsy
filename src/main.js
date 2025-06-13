@@ -322,7 +322,7 @@ writeTab.addEventListener('click', () => {
   textArea.style.display = 'block';
   canvas.style.display   = 'none';
   charCount.style.display = 'block';
-  charCount.textContent   = `${textArea.value.length} / 100`;
+  charCount.textContent   = `${textArea.value.length} / 120`;
 });
 
 // Toggle draw tab
@@ -339,7 +339,7 @@ drawTab.addEventListener('click', () => {
 
 // Live character counter
 textArea.addEventListener('input', () => {
-  charCount.textContent = `${textArea.value.length} / 100`;
+  charCount.textContent = `${textArea.value.length} / 120`;
 });
 
 // Drawing state flags
