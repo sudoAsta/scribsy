@@ -407,7 +407,7 @@ submitBtn.addEventListener('click', async () => {
   if (writeTab.classList.contains('active')) {
     text = textArea.value.trim();
     if (!text) return alert('Write something first!');
-    if (text.length > 100) return alert('Keep under 100 characters.');
+    if (text.length > 120) return alert('Keep under 120 characters.');
     type = 'text';
   } else {
     image = canvas.toDataURL();
