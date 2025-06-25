@@ -623,6 +623,10 @@ body:not(.admin-mode) .post-delete {
     display: none;
   }
 
+  .footer-right a {
+    display: none;
+  }
+
   .footer-left, .footer-right {
     max-width: 100%;
     padding-right: 0;
