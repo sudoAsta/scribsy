@@ -61,7 +61,7 @@ const moodSelect = document.getElementById('mood-select');
 let postCount = 0;
 const MAX_POSTS = 10;
 
-// Update countdown timer to next reset (midnight)
+// Update countdown timer to weekly reset
 function updateCountdown() {
   const now = new Date();
 
@@ -69,12 +69,16 @@ function updateCountdown() {
   const day = now.getUTCDay(); // Sunday = 0
   const daysUntilSunday = (7 - day) % 7;
 
-  const nextReset = new Date(Date.UTC(
+  let nextReset = new Date(Date.UTC(
     now.getUTCFullYear(),
     now.getUTCMonth(),
     now.getUTCDate() + daysUntilSunday,
     16, 0, 0 // 16:00 UTC = 00:00 PH
   ));
+
+   if (nextReset <= now) {
+    nextReset.setUTCDate(nextReset.getUTCDate() + 7);
+  }
 
   const diff = nextReset - now;
   if (diff <= 0) {
