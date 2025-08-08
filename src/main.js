@@ -2,6 +2,9 @@
 
 import './style.css';
 
+// Theme initialization
+const savedTheme = localStorage.getItem('scribsy-theme') || 'dark';
+
 // ✅ Auto-detect local or live API URL
 const API = window.location.hostname.includes('localhost')
   ? 'http://localhost:4000'

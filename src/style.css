@@ -12,9 +12,38 @@ body {
   flex-direction: column;
   min-height: 100vh;
   font-family: "Host Grotesk", Arial, sans-serif;
-  background-color: #1E1E1E;
+  background-color: #0b0f1a;
+  background-image: radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                    radial-gradient(2px 2px at 50px 80px, #fff, transparent),
+                    radial-gradient(1px 1px at 130px 90px, #fff, transparent),
+                    radial-gradient(1px 1px at 70px 150px, #fff, transparent),
+                    radial-gradient(2px 2px at 200px 200px, #fff, transparent),
+                    radial-gradient(1px 1px at 300px 100px, #fff, transparent),
+                    radial-gradient(2px 2px at 400px 300px, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 800px 800px;
   color: #f0f0f0;
   text-align: center;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.8), transparent),
+                    radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.8), transparent),
+                    radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.8), transparent);
+  animation: twinkle 4s infinite alternate;
+  z-index: 0;
 }
 
 img {
@@ -82,14 +111,6 @@ h1 {
   margin: 0;
 }
 
-.header-right button {
-  background-color: #fff100;
-  color: #000;
-  padding: 20px;
-  font-size: 14px;
-  border-radius: 50px;
-}
-
 /* === Buttons === */
 button {
   font-family: inherit;
@@ -108,6 +129,7 @@ button {
   font-weight: 500;
   animation: heartbeat 2s ease-in-out infinite;
   transform-origin: center center;
+  border-radius: 50px;
 }
 
 #create-post:hover {
@@ -470,7 +492,6 @@ body:not(.admin-mode) .post-delete {
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
-
 /* === Footer === */
 #main-footer {
   position: fixed;
@@ -667,5 +688,62 @@ body:not(.admin-mode) .post-delete {
   transform: translateY(20px);
   pointer-events: none;
 }
+}
+
+/* ===== Starry Night Background (Cross‑browser, no JS) ===== */
+body { position: relative; } /* ensures -z-index layer sits behind reliably */
+
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;             /* behind all content */
+  pointer-events: none;
+  /* Fallback color if gradients are unsupported */
+  background: #0b1023;
+  /* Base night gradient (most browsers) */
+  background: linear-gradient(180deg, #0b1023 0%, #1b2735 60%, #090a0f 100%);
+}
+
+/* Two layered star fields using radial-gradients */
+.sky .stars,
+.sky .twinkle {
+  position: absolute;
+  inset: 0;
+}
+
+/* Base star layer — tiny dots on multiple tilings */
+.sky .stars {
+  background:
+    radial-gradient(1px 1px at 10% 20%, #ffffffcc 50%, transparent 51%) repeat,
+    radial-gradient(1px 1px at 70% 80%, #ffffffcc 50%, transparent 51%) repeat,
+    radial-gradient(1px 1px at 40% 60%, #ffffffcc 50%, transparent 51%) repeat,
+    radial-gradient(1px 1px at 85% 35%, #ffffffcc 50%, transparent 51%) repeat;
+  background-size: 180px 180px, 220px 220px, 260px 260px, 320px 320px;
+  /* Avoid filter for maximum compatibility; it’s purely visual anyway */
+}
+
+/* Twinkle overlay — gentle opacity pulse */
+.sky .twinkle {
+  background:
+    radial-gradient(1px 1px at 30% 25%, #ffffffbf 50%, transparent 51%) repeat,
+    radial-gradient(1px 1px at 60% 55%, #ffffffbf 50%, transparent 51%) repeat,
+    radial-gradient(1px 1px at 80% 15%, #ffffffbf 50%, transparent 51%) repeat;
+  background-size: 200px 200px, 260px 260px, 320px 320px;
+  opacity: .8;
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  0%   { opacity: .35; }
+  100% { opacity: .85; }
+}
+
+/* Gentle parallax drift (only if motion allowed) */
+@media (prefers-reduced-motion: no-preference) {
+  .sky .stars   { animation: driftA 120s linear infinite; }
+  .sky .twinkle { animation: twinkle 6s ease-in-out infinite alternate, driftB 180s linear infinite; }
+
+  @keyframes driftA { to { background-position: 200px 200px, -220px -220px, 260px 260px, -320px -320px; } }
+  @keyframes driftB { to { background-position: -200px -200px, 260px 260px, -320px -320px; } }
 }
 
