@@ -7,34 +7,43 @@ const API = window.location.hostname.includes('localhost')
   ? 'http://localhost:4000'
   : 'https://api.scribsy.io';
 
+// Admin login: prompt for password, send to server, store token if valid
 let isAdmin = false;
 
-// Admin login: prompt for password, send to server, store token if valid
 async function askForAdmin() {
   const password = prompt('Enter admin password:');
   if (!password) return;
+  const res = await fetch(`${API}/api/admin/login`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ password })
+  });
+  const data = await res.json();
+  if (!res.ok) return alert(data.error || 'Login failed');
+  localStorage.setItem('scribsy-admin-token', data.token);
+  isAdmin = true;
+  document.body.classList.add('admin-mode');
+  document.querySelectorAll('.post-wrapper').forEach(addDeleteButton);
+}
 
-  try {
-    const res = await fetch(`${API}/api/admin/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
+});
+
+function addDeleteButton(wrapper) {
+  if (wrapper.querySelector('.post-delete')) return;
+  const btn = document.createElement('button');
+  btn.className = 'post-delete';
+  btn.textContent = '✕';
+  btn.addEventListener('click', async () => {
+    const token = localStorage.getItem('scribsy-admin-token');
+    const res = await fetch(`${API}/api/posts/${wrapper.dataset.id}`, {
+      method: 'DELETE',
+      headers: { 'x-auth-token': token }
     });
-
-    const data = await res.json();
-
-    if (res.ok && data.token) {
-      localStorage.setItem('scribsy-admin-token', data.token);
-      isAdmin = true;
-      document.body.classList.add('admin-mode');
-      document.querySelectorAll('.post-wrapper').forEach(addDeleteButton);
-    } else {
-      alert('Wrong password');
-    }
-  } catch (err) {
-    console.error('Admin login failed:', err);
-    alert('Login error.');
-  }
+    if (!res.ok) return alert('Delete failed');
+    wrapper.remove();
+  });
+  wrapper.append(btn);
 }
 
 // Enable admin login via keyboard shortcut Ctrl+Shift+A
