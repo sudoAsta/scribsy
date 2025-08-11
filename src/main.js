@@ -29,23 +29,6 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
 });
 
-function addDeleteButton(wrapper) {
-  if (wrapper.querySelector('.post-delete')) return;
-  const btn = document.createElement('button');
-  btn.className = 'post-delete';
-  btn.textContent = '✕';
-  btn.addEventListener('click', async () => {
-    const token = localStorage.getItem('scribsy-admin-token');
-    const res = await fetch(`${API}/api/posts/${wrapper.dataset.id}`, {
-      method: 'DELETE',
-      headers: { 'x-auth-token': token }
-    });
-    if (!res.ok) return alert('Delete failed');
-    wrapper.remove();
-  });
-  wrapper.append(btn);
-}
-
 // Enable admin login via keyboard shortcut Ctrl+Shift+A
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
