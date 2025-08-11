@@ -129,7 +129,11 @@ function renderPost(post, prepend = false) {
   } else if (post.type === 'image') {
     const img = document.createElement('img');
     img.src = post.image;
-    img.alt = `Drawing by ${post.name}, mood ${post.mood}`;
+    img.alt = `Anonymous drawing, mood: ${post.mood || 'default'}`;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.width = 400;  // reserve space to avoid layout shift
+    img.height = 300; // 4:3 ratio
     wrapper.append(img);
   }
 
@@ -454,7 +458,6 @@ let canvasReady = false;
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
-  document.body.style.visibility = 'visible';
   resizeCanvas();
   loadPosts();
   updateEmptyState();

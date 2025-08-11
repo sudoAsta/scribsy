@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset 
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://YOURDOMAIN.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://YOURDOMAIN.com/past.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <!-- add About & Guidelines page when it’s live -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://scribsy.io/</loc></url>
+  <url><loc>https://scribsy.io/past</loc></url>
+  <url><loc>https://scribsy.io/about</loc></url>
 </urlset>
