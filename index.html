@@ -46,7 +46,7 @@
 
   <main id="main-content" role="main">
     <section id="intro-description" style="margin-top: 30px; padding: 0 20px; color: #FFE490; font-size: 1rem; max-width: 600px; margin-left: auto; margin-right: auto; text-align: center;">
-      <p><strong>Scribsy</strong> is your anonymous space to write or draw freely. No logins. No limits. The wall resets weekly.</p>
+      <p><strong>Scribsy</strong> is your anonymous space to write, draw, or vent freely. No logins. No limits. Share what’s on your mind—then watch the wall reset every week.</p>
     </section>
 
     <!-- header is above -->
@@ -54,8 +54,7 @@
     <div id="wall"></div>
     <!-- modal lives here too -->
   </main>
- 
-    
+
   <footer id="main-footer" role="contentinfo">
     <div class="footer-left">
       <h1>Anonymous Freedom Wall</h1>
@@ -68,58 +67,60 @@
       </p>
       <a href="past.html">View Past Walls</a>
       <a href="about.html">About & Guidelines</a>
+      <a href="/blog/">Blog</a>
     </div>
   </footer>
 
-    <!-- modal -->
-    <div id="overlay" class="hidden" tabindex="-1">
-      <aside id="post-modal" class="hidden" role="dialog" arial-modal="true" aria-labelledby="modal-title">
-        <header class="modal-header">
-          <h2>WHAT'S ON YOUR MIND</h2>
-          <p>Share your ideas on your Freedo-Wall, where every voice finds its place.</p>
-          <button id="close-modal" aria-label="Close create post modal">✕</button>
-        </header>
+  <!-- modal -->
+  <div id="overlay" class="hidden" tabindex="-1">
+    <aside id="post-modal" class="hidden" role="dialog" arial-modal="true" aria-labelledby="modal-title">
+      <header class="modal-header">
+        <h2>WHAT'S ON YOUR MIND</h2>
+        <p>Share your ideas on your Freedo-Wall, where every voice finds its place.</p>
+        <button id="close-modal" aria-label="Close create post modal">✕</button>
+      </header>
 
-        <div class="modal-body">
-          <div class="tabs">
-            <div class="tab tab-divider active" id="write-tab" aria-controls="post-text">Write</div>
-            <div class="tab" id="draw-tab" aria-controls="draw-canvas">Draw</div>
-          </div>
-
-          <textarea id="post-text" maxlength="120" placeholder="Type up to 120 characters…"></textarea>
-          <div id="char-count">0 / 120</div>
-          <canvas id="draw-canvas" class="hidden"></canvas>
-
-          <div class="controls">
-            <select id="mood-select">
-              <option value="">Select Mood</option>
-              <option value="Dreamy">Dreamy</option>
-              <option value="Happy">Happy</option>
-              <option value="Sad">Sad</option>
-              <option value="Meh">Meh</option>
-              <option value="Rant">Rant</option>
-            </select>
-
-            <div class="theme-swatches">
-              <span class="swatch" style="background-color: #EDD5C0"></span>
-              <span class="swatch" style="background-color: #F1A805"></span>
-              <span class="swatch" style="background-color: #F2D6A1"></span>
-              <span class="swatch" style="background-color: #B3D9E0"></span>
-              <span class="swatch" style="background-color: #92ADA4"></span>
-            </div>
-          </div>
-
-          <input type="text" id="post-name" placeholder="Name (optional)">
-          <button id="submit-post" aria-label="Submit your post">SUBMIT</button>
+      <div class="modal-body">
+        <div class="tabs">
+          <div class="tab tab-divider active" id="write-tab" aria-controls="post-text">Write</div>
+          <div class="tab" id="draw-tab" aria-controls="draw-canvas">Draw</div>
         </div>
-      </aside>
-    </div>
-    <!-- end of modal -->
-    <!-- Starry Night Background -->
-    <div class="sky" aria-hidden="true">
-      <div class="stars"></div>
-      <div class="twinkle"></div>
-    </div>
+
+        <textarea id="post-text" maxlength="120" placeholder="Type up to 120 characters…"></textarea>
+        <div id="char-count">0 / 120</div>
+        <canvas id="draw-canvas" class="hidden"></canvas>
+
+        <div class="controls">
+          <select id="mood-select">
+            <option value="">Select Mood</option>
+            <option value="Dreamy">Dreamy</option>
+            <option value="Happy">Happy</option>
+            <option value="Sad">Sad</option>
+            <option value="Meh">Meh</option>
+            <option value="Rant">Rant</option>
+          </select>
+
+          <div class="theme-swatches">
+            <span class="swatch" style="background-color: #EDD5C0"></span>
+            <span class="swatch" style="background-color: #F1A805"></span>
+            <span class="swatch" style="background-color: #F2D6A1"></span>
+            <span class="swatch" style="background-color: #B3D9E0"></span>
+            <span class="swatch" style="background-color: #92ADA4"></span>
+          </div>
+        </div>
+
+        <input type="text" id="post-name" placeholder="Name (optional)">
+        <button id="submit-post" aria-label="Submit your post">SUBMIT</button>
+      </div>
+    </aside>
+  </div>
+  <!-- end of modal -->
+
+  <!-- Starry Night Background -->
+  <div class="sky" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="twinkle"></div>
+  </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>
