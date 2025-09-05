@@ -428,14 +428,31 @@ submitBtn.addEventListener('click', async () => {
     console.error('Post failed', err);
   }
 
-  // Disable button temporarily and reset modal
-  submitBtn.disabled = true;
-  setTimeout(() => submitBtn.disabled = postCount >= MAX_POSTS, 5000);
+  // Start 30s cooldown and reset modal
+  startCooldown();
   textArea.value = '';
   nameInput.value = '';
   moodSelect.value = '';
   closeModal();
 });
+
+// Cooldown logic for submit button
+const originalSubmitText = submitBtn.textContent;
+function startCooldown() {
+  let remaining = 30;
+  submitBtn.disabled = true;
+  submitBtn.textContent = `${remaining}s`;
+  const interval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(interval);
+      submitBtn.disabled = postCount >= MAX_POSTS;
+      submitBtn.textContent = originalSubmitText;
+    } else {
+      submitBtn.textContent = `${remaining}s`;
+    }
+  }, 1000);
+}
 
 let canvasReady = false;
 
