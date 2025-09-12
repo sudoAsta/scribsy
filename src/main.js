@@ -141,7 +141,7 @@ function renderPost(post, prepend = false) {
   const shareBtn = document.createElement('button');
   shareBtn.className = 'post-share';
   shareBtn.setAttribute('aria-label', 'Share this post');
-  shareBtn.innerHTML = `<span class="icon">🔗</span><span>Share</span>`;
+  shareBtn.innerHTML = `<span class="icon">🔗</span>`;
   shareBtn.addEventListener('click', async () => {
     const shareUrl = `${API}/share/${post.id}`;
     const shareData = {
@@ -320,7 +320,7 @@ canvas.addEventListener('touchend', stopDrawing);
 // Submit a post
 submitBtn.addEventListener('click', async () => {
   if (postCount >= MAX_POSTS) return alert(`Max ${MAX_POSTS} posts reached.`);
-  const name = nameInput.value.trim() || 'Anonymous';
+  const name = nameInput.value.trim() || 'Anon';
   const mood = moodSelect.value;
   let type, text, image;
 
