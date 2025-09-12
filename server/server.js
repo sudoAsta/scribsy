@@ -29,7 +29,7 @@ const postLimiter = rateLimit({
   message: { error: 'Too many posts from this IP. Please try again later.' }
 });
 
-// ─── Tiny in‑memory token store (24h expiry) ───
+// ─── Tiny in-memory token store (24h expiry) ───
 const sessions = new Map();
 function issueToken() {
   const token = nanoid();
@@ -71,6 +71,7 @@ async function archiveNow() {
   console.log('📦 Archived posts for', today);
 }
 
+// Weekly at Sunday 16:00 UTC
 cron.schedule('0 16 * * 0', archiveNow);
 
 // ─── Routes ─────────────────────────────────────
@@ -158,12 +159,12 @@ app.get('/og/:id.png', async (req, res) => {
     const id = req.params.id;
     let post;
 
-    // Try fetching post from live posts
+    // Try live posts first
     const live = await firestore.collection('posts').doc(id).get();
     if (live.exists) {
       post = live.data();
     } else {
-      // Try archives
+      // Then archives
       const archivesSnap = await firestore.collection('archives').get();
       for (const doc of archivesSnap.docs) {
         const data = doc.data();
@@ -213,7 +214,7 @@ app.get('/og/:id.png', async (req, res) => {
   }
 });
 
-// ─── Per-post HTML route with OG tags ───────
+// ─── Per-post HTML route with OG tags (scrapers) + redirect (humans) ───────
 app.get('/p/:id', async (req, res) => {
   const id = req.params.id;
   let post;
@@ -232,30 +233,45 @@ app.get('/p/:id', async (req, res) => {
 
   if (!post) return res.status(404).send('Not found');
 
-  const ogUrl = `https://api.scribsy.io/og/${id}.png`;
+  const clickThru = 'https://scribsy.io';                   // where humans land
+  const ogImg     = `https://api.scribsy.io/og/${id}.png`;  // per-post image
+  const title     = 'Scribsy Post';
+  const desc      = (post.text || 'Anonymous post').slice(0, 180).replace(/"/g, '&quot;');
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scribsy Post</title>
-  <meta property="og:title" content="Scribsy Post" />
-  <meta property="og:description" content="${post.text || 'Anonymous post'}" />
-  <meta property="og:image" content="${ogUrl}" />
+  <title>${title}</title>
+
+  <link rel="canonical" href="${clickThru}" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${desc}" />
+  <meta property="og:image" content="${ogImg}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://scribsy.io/p/${id}" />
+  <meta property="og:url" content="${clickThru}" />
+
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Scribsy Post" />
-  <meta name="twitter:description" content="${post.text || 'Anonymous post'}" />
-  <meta name="twitter:image" content="${ogUrl}" />
-</head>s
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${desc}" />
+  <meta name="twitter:image" content="${ogImg}" />
+
+  <!-- Redirect humans quickly -->
+  <meta http-equiv="refresh" content="0; url=${clickThru}">
+</head>
 <body>
-  <p>Redirecting… <a href="https://scribsy.io">Go to Scribsy</a></p>
-  <script>window.location.href='https://scribsy.io';</script>
+  <p>Redirecting… <a href="${clickThru}">Go to Scribsy</a></p>
+  <script>window.location.replace('${clickThru}');</script>
 </body>
 </html>`;
 
-  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
 });
 

@@ -177,18 +177,26 @@ function renderPost(post, prepend = false) {
   });
   wrapper.append(tray);
 
-  // ➡️ Share button
+  // ➡️ Share button (points to API /p/:id so scrapers see OG tags; humans get redirected to homepage)
   const shareBtn = document.createElement('button');
   shareBtn.className = 'post-share';
   shareBtn.textContent = '🔗 Share';
   shareBtn.addEventListener('click', async () => {
-    const shareUrl = `${window.location.origin}/p/${post.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Scribsy Post', text: post.text || 'See this Scribsy post', url: shareUrl });
-      } catch (err) { console.error('Share canceled', err); }
-    } else {
-      navigator.clipboard.writeText(shareUrl);
+    const shareUrl = `${API}/p/${post.id}`;
+    const shareData = {
+      title: 'Scribsy Post',
+      text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
+      url: shareUrl
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      await navigator.clipboard.writeText(shareUrl);
       alert('Link copied to clipboard!');
     }
   });
