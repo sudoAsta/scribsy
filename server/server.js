@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import { nanoid } from 'nanoid';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'node:fs/promises';
 
 // ─── Firebase ──────────────────────────────────
 const creds = JSON.parse(process.env.FIREBASE_CREDENTIALS);
@@ -17,6 +18,7 @@ const firestore = getFirestore();
 
 // ─── Express ───────────────────────────────────
 const app = express();
+app.set('trust proxy', true); // correct protocol/host behind proxies
 app.use(cors({
   origin: ['http://localhost:5173', 'https://scribsy.io', 'https://api.scribsy.io']
 }));
@@ -29,15 +31,8 @@ const postLimiter = rateLimit({
   message: { error: 'Too many posts from this IP. Please try again later.' }
 });
 
-app.set('trust proxy', true);
-
-const CRAWLER_UA = /(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|Discordbot|TelegramBot|Pinterest|Googlebot|bingbot)/i;
-function isCrawler(req) {
-  return CRAWLER_UA.test(req.get('user-agent') || '');
-}
-
 // ─── Tiny in-memory token store (24h expiry) ───
-const sessions = new Map();
+const sessions = new Map(); // token -> expiry timestamp
 function issueToken() {
   const token = nanoid();
   sessions.set(token, Date.now() + 24 * 60 * 60 * 1000);
@@ -78,10 +73,50 @@ async function archiveNow() {
   console.log('📦 Archived posts for', today);
 }
 
-// Weekly at Sunday 16:00 UTC
+// Weekly at Sunday 16:00 UTC (Mon 00:00 PH)
 cron.schedule('0 16 * * 0', archiveNow);
 
-// ─── Routes ─────────────────────────────────────
+// ─── Helpers ───────────────────────────────────
+async function getPostById(id) {
+  const live = await firestore.collection('posts').doc(id).get();
+  if (live.exists) return live.data();
+
+  const archivesSnap = await firestore.collection('archives').get();
+  for (const doc of archivesSnap.docs) {
+    const data = doc.data();
+    const hit = (data.posts || []).find(p => p.id === id);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+const CRAWLER_UA = /(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|Discordbot|TelegramBot|Pinterest|Googlebot|bingbot)/i;
+function isCrawler(req) {
+  return CRAWLER_UA.test(req.get('user-agent') || '');
+}
+
+// OG font loader (local TTFs; avoids remote/WOFF issues)
+const fontCache = { ready: false };
+async function loadOgFonts() {
+  if (fontCache.ready) return fontCache;
+  const interRegUrl = new URL('./fonts/Inter-Regular.ttf', import.meta.url);
+  const interBoldUrl = new URL('./fonts/Inter-Bold.ttf', import.meta.url);
+  const emojiUrl    = new URL('./fonts/NotoEmoji-Regular.ttf', import.meta.url); // optional
+
+  const [interReg, interBold, emoji] = await Promise.all([
+    fs.readFile(interRegUrl),
+    fs.readFile(interBoldUrl),
+    fs.readFile(emojiUrl).catch(() => null)
+  ]);
+
+  fontCache.interReg = interReg;
+  fontCache.interBold = interBold;
+  fontCache.emoji = emoji; // may be null
+  fontCache.ready = true;
+  return fontCache;
+}
+
+// ─── API Routes ────────────────────────────────
 app.get('/api/posts', async (_, res) => {
   const snap = await firestore.collection('posts').orderBy('createdAt', 'desc').get();
   const posts = snap.docs.map(doc => ({ reactions: {}, ...doc.data() }));
@@ -152,120 +187,75 @@ app.post('/api/archive-now', async (_, res) => {
   res.json({ success: true });
 });
 
-// ─── OG Image route with fonts & caching ───────
+// ─── OG Image: /og/:id.png ─────────────────────
 app.get('/og/:id.png', async (req, res) => {
   try {
     const { default: satori } = await import('satori').catch(() => ({}));
     const { Resvg } = await import('@resvg/resvg-js').catch(() => ({}));
     if (!satori || !Resvg) {
-      console.warn('OG image libraries not available, using fallback.');
+      console.warn('OG: satori/resvg not available; falling back.');
       return res.redirect(302, 'https://scribsy.io/og-image.png');
     }
 
-    // Lazy, in-memory font cache (Render dynos can make outbound requests)
-    globalThis.__scribsyFonts ||= {};
-    const fonts = globalThis.__scribsyFonts;
-
-    async function loadFontsOnce() {
-      if (fonts.ready) return;
-      const [interReg, interBold, emoji] = await Promise.all([
-        fetch('https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Regular.ttf').then(r => r.arrayBuffer()),
-        fetch('https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Bold.ttf').then(r => r.arrayBuffer()),
-        // Monochrome emoji TTF (works well with satori/resvg)
-        fetch('https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoEmoji-Regular.ttf')
-          .then(r => r.arrayBuffer())
-          .catch(() => null)
-      ]);
-      fonts.interReg = Buffer.from(interReg);
-      fonts.interBold = Buffer.from(interBold);
-      fonts.emoji = emoji ? Buffer.from(emoji) : null;
-      fonts.ready = true;
-    }
-
-    await loadFontsOnce();
-
-    const id = req.params.id;
-    let post;
-
-    // Try live post
-    const live = await firestore.collection('posts').doc(id).get();
-    if (live.exists) post = live.data();
-
-    // Fall back to archives
-    if (!post) {
-      const archivesSnap = await firestore.collection('archives').get();
-      for (const doc of archivesSnap.docs) {
-        const hit = (doc.data().posts || []).find(p => p.id === id);
-        if (hit) { post = hit; break; }
-      }
-    }
-
+    const post = await getPostById(req.params.id);
     if (!post) return res.status(404).send('Not found');
+
+    const fonts = await loadOgFonts();
 
     const text = (post.text || 'Scribsy Post').toString();
     const name = (post.name || 'Anonymous').toString();
     const mood = (post.mood || 'default').toString();
 
-    const svg = await satori(
-      {
-        type: 'div',
-        props: {
-          style: {
-            width: 1200,
-            height: 630,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            background: 'linear-gradient(180deg,#0b1023,#1b2735 60%,#090a0f)',
-            color: '#fff',
-            padding: 64
-          },
-          children: [
-            {
-              type: 'div',
-              props: {
-                style: {
-                  fontSize: 54,
-                  lineHeight: 1.2,
-                  whiteSpace: 'pre-wrap'
-                },
-                children: `“${text}”`
-              }
-            },
-            {
-              type: 'div',
-              props: {
-                style: {
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: 28
-                },
-                children: [
-                  `by ${name} • ${mood}`,
-                  {
-                    type: 'div',
-                    props: {
-                      style: { fontSize: 24, opacity: 0.8 },
-                      children: 'scribsy.io'
-                    }
-                  }
-                ]
-              }
+    // Simple, legible card
+    const tree = {
+      type: 'div',
+      props: {
+        style: {
+          width: 1200,
+          height: 630,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          background: 'linear-gradient(180deg,#0b1023,#1b2735 60%,#090a0f)',
+          color: '#fff',
+          padding: 64
+        },
+        children: [
+          {
+            type: 'div',
+            props: {
+              style: { fontSize: 54, lineHeight: 1.2, whiteSpace: 'pre-wrap' },
+              children: `“${text}”`
             }
-          ]
-        }
-      },
-      {
-        width: 1200,
-        height: 630,
-        fonts: [
-          { name: 'Inter', data: fonts.interReg, weight: 400, style: 'normal' },
-          { name: 'Inter', data: fonts.interBold, weight: 700, style: 'bold' },
-          ...(fonts.emoji ? [{ name: 'Noto Emoji', data: fonts.emoji, weight: 400, style: 'normal' }] : [])
+          },
+          {
+            type: 'div',
+            props: {
+              style: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: 28
+              },
+              children: [
+                `by ${name} • ${mood}`,
+                { type: 'div', props: { style: { fontSize: 24, opacity: .85 }, children: 'scribsy.io' } }
+              ]
+            }
+          }
         ]
       }
-    );
+    };
+
+    const svg = await satori(tree, {
+      width: 1200,
+      height: 630,
+      fonts: [
+        { name: 'Inter', data: fonts.interReg, weight: 400, style: 'normal' },
+        { name: 'Inter', data: fonts.interBold, weight: 700, style: 'normal' },
+        ...(fonts.emoji ? [{ name: 'Noto Emoji', data: fonts.emoji, weight: 400, style: 'normal' }] : [])
+      ]
+    });
 
     const png = new Resvg(svg).render().asPng();
     res.setHeader('Content-Type', 'image/png');
@@ -277,37 +267,32 @@ app.get('/og/:id.png', async (req, res) => {
   }
 });
 
-// Bot-aware share page: bots get OG HTML, humans get 302 to homepage
+// ─── Share Page (bot-aware): /share/:id ─────────
+// Bots get OG HTML (unique og:url + per-post image).
+// Humans get 302 to homepage.
+// Always set X-Robots-Tag: noindex so these pages aren’t indexed.
 app.get('/share/:id', async (req, res) => {
   const id = req.params.id;
-
-  // find post (live or archived)
-  let post = null;
-  const live = await firestore.collection('posts').doc(id).get();
-  if (live.exists) post = live.data();
-  if (!post) {
-    const archivesSnap = await firestore.collection('archives').get();
-    for (const doc of archivesSnap.docs) {
-      const hit = (doc.data().posts || []).find((p) => p.id === id);
-      if (hit) { post = hit; break; }
-    }
-  }
+  const post = await getPostById(id);
   if (!post) return res.status(404).send('Not found');
 
   const escape = (s='') => String(s)
     .slice(0, 200)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
 
-  // Build absolute URLs
-  const host     = req.get('host');                  // e.g., api.scribsy.io
-  const shareUrl = `https://${host}${req.originalUrl}`; // unique per post
-  const ogImg    = `https://${host}/og/${id}.png`;   // per-post image
+  const host     = req.get('host'); // e.g., api.scribsy.io
+  const shareUrl = `https://${host}${req.originalUrl}`;
+  const ogImg    = `https://${host}/og/${id}.png`;
   const title    = 'Scribsy Post';
   const desc     = escape(post.text || 'Anonymous post');
 
+  // Never index this page
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+
   if (!isCrawler(req)) {
-    // Humans → go to main site
+    // Humans → homepage
     return res.redirect(302, 'https://scribsy.io');
   }
 
@@ -317,6 +302,7 @@ app.get('/share/:id', async (req, res) => {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${title}</title>
+  <meta name="robots" content="noindex, nofollow" />
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Scribsy" />
@@ -336,82 +322,20 @@ app.get('/share/:id', async (req, res) => {
   <meta name="twitter:image" content="${ogImg}" />
 </head>
 <body>
-  <!-- Bot-only page. Humans won’t see this. -->
+  <!-- Bot-only landing. Humans are redirected server-side. -->
   <p>Scribsy</p>
 </body></html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  // Let scrapers re-scrape when text changes
   res.setHeader('Cache-Control', 'no-cache');
   return res.send(html);
 });
 
-// ─── Per-post HTML route with safe OG tags & redirect ───────
-app.get('/p/:id', async (req, res) => {
-  const id = req.params.id;
-
-  function escapeHtml(s = '') {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  let post;
-  const live = await firestore.collection('posts').doc(id).get();
-  if (live.exists) post = live.data();
-  if (!post) {
-    const archivesSnap = await firestore.collection('archives').get();
-    for (const doc of archivesSnap.docs) {
-      const hit = (doc.data().posts || []).find(p => p.id === id);
-      if (hit) { post = hit; break; }
-    }
-  }
-  if (!post) return res.status(404).send('Not found');
-
-  // compute the unique share URL for this page (force https to avoid proxy issues)
-  const shareUrl = `https://${req.get('host')}${req.originalUrl}`;
-  const ogImg    = `https://${req.get('host')}/og/${id}.png`;
-  const title    = 'Scribsy Post';
-  const desc     = escapeHtml((post.text || 'Anonymous post').slice(0, 200));
-
-  const html = `<!DOCTYPE html>
-  <html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
-
-    <!-- Open Graph (FB reads these, keyed by og:url) -->
-    <meta property="og:site_name" content="Scribsy" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${desc}" />
-    <meta property="og:type" content="article" />
-    <meta property="og:url" content="${shareUrl}" />
-    <meta property="og:image" content="${ogImg}" />
-    <meta property="og:image:secure_url" content="${ogImg}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-
-    <!-- Twitter still works too -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${desc}" />
-    <meta name="twitter:image" content="${ogImg}" />
-
-    <!-- Redirect humans to the main site -->
-    <meta http-equiv="refresh" content="0; url=https://scribsy.io">
-  </head>
-  <body>
-    <p>Redirecting… <a href="https://scribsy.io">Go to Scribsy</a></p>
-    <script>window.location.replace('https://scribsy.io');</script>
-  </body></html>`;
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache'); // let FB re-scrape fresh
-  return res.send(html);
+// Back-compat: /p/:id → 301 /share/:id
+app.get('/p/:id', (req, res) => {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.redirect(301, `/share/${req.params.id}`);
 });
-
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
