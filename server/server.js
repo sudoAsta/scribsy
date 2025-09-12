@@ -29,6 +29,13 @@ const postLimiter = rateLimit({
   message: { error: 'Too many posts from this IP. Please try again later.' }
 });
 
+app.set('trust proxy', true);
+
+const CRAWLER_UA = /(facebookexternalhit|Facebot|Twitterbot|Slackbot|LinkedInBot|Discordbot|TelegramBot|Pinterest|Googlebot|bingbot)/i;
+function isCrawler(req) {
+  return CRAWLER_UA.test(req.get('user-agent') || '');
+}
+
 // ─── Tiny in-memory token store (24h expiry) ───
 const sessions = new Map();
 function issueToken() {
@@ -268,6 +275,75 @@ app.get('/og/:id.png', async (req, res) => {
     console.error('OG generation failed:', err);
     return res.redirect(302, 'https://scribsy.io/og-image.png');
   }
+});
+
+// Bot-aware share page: bots get OG HTML, humans get 302 to homepage
+app.get('/share/:id', async (req, res) => {
+  const id = req.params.id;
+
+  // find post (live or archived)
+  let post = null;
+  const live = await firestore.collection('posts').doc(id).get();
+  if (live.exists) post = live.data();
+  if (!post) {
+    const archivesSnap = await firestore.collection('archives').get();
+    for (const doc of archivesSnap.docs) {
+      const hit = (doc.data().posts || []).find((p) => p.id === id);
+      if (hit) { post = hit; break; }
+    }
+  }
+  if (!post) return res.status(404).send('Not found');
+
+  const escape = (s='') => String(s)
+    .slice(0, 200)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  // Build absolute URLs
+  const host     = req.get('host');                  // e.g., api.scribsy.io
+  const shareUrl = `https://${host}${req.originalUrl}`; // unique per post
+  const ogImg    = `https://${host}/og/${id}.png`;   // per-post image
+  const title    = 'Scribsy Post';
+  const desc     = escape(post.text || 'Anonymous post');
+
+  if (!isCrawler(req)) {
+    // Humans → go to main site
+    return res.redirect(302, 'https://scribsy.io');
+  }
+
+  // Bots → OG HTML (no redirect)
+  const html = `<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${title}</title>
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Scribsy" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${desc}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="${shareUrl}" />
+  <meta property="og:image" content="${ogImg}" />
+  <meta property="og:image:secure_url" content="${ogImg}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${desc}" />
+  <meta name="twitter:image" content="${ogImg}" />
+</head>
+<body>
+  <!-- Bot-only page. Humans won’t see this. -->
+  <p>Scribsy</p>
+</body></html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  // Let scrapers re-scrape when text changes
+  res.setHeader('Cache-Control', 'no-cache');
+  return res.send(html);
 });
 
 // ─── Per-post HTML route with safe OG tags & redirect ───────

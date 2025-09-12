@@ -182,7 +182,7 @@ function renderPost(post, prepend = false) {
   shareBtn.className = 'post-share';
   shareBtn.textContent = '🔗 Share';
   shareBtn.addEventListener('click', async () => {
-    const shareUrl = `${API}/p/${post.id}`;
+    const shareUrl = `${API}/share/${post.id}`;
     const shareData = {
       title: 'Scribsy Post',
       text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
