@@ -270,7 +270,7 @@ app.get('/og/:id.png', async (req, res) => {
 // ─── Share Page (bot-aware): /share/:id ─────────
 // Bots get OG HTML (unique og:url + per-post image).
 // Humans get 302 to homepage.
-// Always set X-Robots-Tag: noindex so these pages aren’t indexed.
+// Not indexed.
 app.get('/share/:id', async (req, res) => {
   const id = req.params.id;
   const post = await getPostById(id);
@@ -282,17 +282,25 @@ app.get('/share/:id', async (req, res) => {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     .replace(/'/g,'&#39;');
 
-  const host     = req.get('host'); // e.g., api.scribsy.io
-  const shareUrl = `https://${host}${req.originalUrl}`;
-  const ogImg    = `https://${host}/og/${id}.png`;
+  // Honor original host/proto when proxied by Netlify
+  // (Netlify sets x-forwarded-host: scribsy.io, x-forwarded-proto: https)
+  const fwdHost  = (req.headers['x-forwarded-host']  || '').split(',')[0].trim();
+  const fwdProto = (req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const host     = fwdHost  || req.get('host');                 // scribsy.io if proxied, api.scribsy.io direct
+  const proto    = fwdProto || req.protocol || 'https';
+
+  const shareUrl = `${proto}://${host}${req.originalUrl}`;       // ← used for og:url (will be https://scribsy.io/share/:id)
+  const ogImg    = `https://api.scribsy.io/og/${id}.png`;        // keep image on API domain
   const title    = 'Scribsy Post';
   const desc     = escape(post.text || 'Anonymous post');
 
-  // Never index this page
+  // Don’t let these pages be indexed; help caches split on UA/forwarded headers
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('Vary', 'User-Agent, X-Forwarded-Host, X-Forwarded-Proto');
+  res.setHeader('Cache-Control', 'no-cache');
 
+  // Humans → homepage
   if (!isCrawler(req)) {
-    // Humans → homepage
     return res.redirect(302, 'https://scribsy.io');
   }
 
@@ -321,14 +329,9 @@ app.get('/share/:id', async (req, res) => {
   <meta name="twitter:description" content="${desc}" />
   <meta name="twitter:image" content="${ogImg}" />
 </head>
-<body>
-  <!-- Bot-only landing. Humans are redirected server-side. -->
-  <p>Scribsy</p>
-</body></html>`;
+<body><p>Scribsy</p></body></html>`;
 
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache');
-  return res.send(html);
+  res.type('html').send(html);
 });
 
 // Back-compat: /p/:id → 301 /share/:id
