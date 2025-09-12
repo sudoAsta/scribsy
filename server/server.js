@@ -295,33 +295,45 @@ app.get('/p/:id', async (req, res) => {
   }
   if (!post) return res.status(404).send('Not found');
 
-  const desc = escapeHtml((post.text || 'Anonymous post').slice(0, 200));
-  const ogUrl = `https://api.scribsy.io/og/${id}.png`;
+  // compute the unique share URL for this page (force https to avoid proxy issues)
+  const shareUrl = `https://${req.get('host')}${req.originalUrl}`;
+  const ogImg    = `https://${req.get('host')}/og/${id}.png`;
+  const title    = 'Scribsy Post';
+  const desc     = escapeHtml((post.text || 'Anonymous post').slice(0, 200));
 
   const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scribsy Post</title>
-  <meta property="og:title" content="Scribsy Post" />
-  <meta property="og:description" content="${desc}" />
-  <meta property="og:image" content="${ogUrl}" />
-  <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://scribsy.io/p/${id}" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Scribsy Post" />
-  <meta name="twitter:description" content="${desc}" />
-  <meta name="twitter:image" content="${ogUrl}" />
-</head>
-<body>
-  <p>Redirecting… <a href="https://scribsy.io">Go to Scribsy</a></p>
-  <script>window.location.replace('https://scribsy.io');</script>
-</body>
-</html>`;
+  <html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
 
-  res.setHeader('Content-Type', 'text/html');
-  res.send(html);
+    <!-- Open Graph (FB reads these, keyed by og:url) -->
+    <meta property="og:site_name" content="Scribsy" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${desc}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="${shareUrl}" />
+    <meta property="og:image" content="${ogImg}" />
+    <meta property="og:image:secure_url" content="${ogImg}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter still works too -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${desc}" />
+    <meta name="twitter:image" content="${ogImg}" />
+
+    <!-- Redirect humans to the main site -->
+    <meta http-equiv="refresh" content="0; url=https://scribsy.io">
+  </head>
+  <body>
+    <p>Redirecting… <a href="https://scribsy.io">Go to Scribsy</a></p>
+    <script>window.location.replace('https://scribsy.io');</script>
+  </body></html>`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache'); // let FB re-scrape fresh
+  return res.send(html);
 });
 
 
