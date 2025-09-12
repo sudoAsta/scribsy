@@ -25,11 +25,8 @@ async function askForAdmin() {
   document.querySelectorAll('.post-wrapper').forEach(addDeleteButton);
 }
 
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
-});
-
 // Enable admin login via keyboard shortcut Ctrl+Shift+A
+// (single binding only; removed duplicate)
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') askForAdmin();
 });
@@ -56,34 +53,26 @@ const MAX_POSTS = 10;
 // Update countdown timer to weekly reset
 function updateCountdown() {
   const now = new Date();
-
-  // Find next Sunday 16:00 UTC (Monday 00:00 PH time)
   const day = now.getUTCDay(); // Sunday = 0
   const daysUntilSunday = (7 - day) % 7;
-
   let nextReset = new Date(Date.UTC(
     now.getUTCFullYear(),
     now.getUTCMonth(),
     now.getUTCDate() + daysUntilSunday,
     16, 0, 0 // 16:00 UTC = 00:00 PH
   ));
-
-   if (nextReset <= now) {
+  if (nextReset <= now) {
     nextReset.setUTCDate(nextReset.getUTCDate() + 7);
   }
-
   const diff = nextReset - now;
   if (diff <= 0) {
     document.querySelector('#reset-timer .reset-value').textContent = '0d 0h 0m';
     return;
   }
-
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const mins = Math.floor((diff / (1000 * 60)) % 60);
-
-  document.querySelector('#reset-timer .reset-value').textContent =
-    `${days}d ${hours}h ${mins}m`;
+  document.querySelector('#reset-timer .reset-value').textContent = `${days}d ${hours}h ${mins}m`;
 }
 
 updateCountdown();
@@ -94,7 +83,31 @@ function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
 
-// ✅ Mobile-friendly reaction tray
+// Small helper: create Share button (permalink to /p/:id)
+function makeShareButton(post) {
+  const btn = document.createElement('button');
+  btn.className = 'share-btn';
+  btn.type = 'button';
+  btn.textContent = 'Share';
+  const permalink = `https://scribsy.io/p/${post.id}`;
+  btn.addEventListener('click', async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Scribsy Post',
+          text: post.text ? `“${post.text}”` : 'See this Scribsy post',
+          url: permalink
+        });
+      } else {
+        await navigator.clipboard.writeText(permalink);
+        alert('Link copied!');
+      }
+    } catch (_) {}
+  });
+  return btn;
+}
+
+// ✅ Mobile-friendly reaction tray + share
 function renderPost(post, prepend = false) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('post-wrapper');
@@ -178,49 +191,51 @@ function renderPost(post, prepend = false) {
 
   wrapper.append(tray);
 
-// 📱 Mobile: tap to toggle tray
-if (window.innerWidth <= 600) {
-  let autoHideTimer = null;
+  // Actions row (Share button, right-aligned)
+  const actions = document.createElement('div');
+  actions.className = 'post-actions';
+  actions.append(makeShareButton(post));
+  wrapper.append(actions);
 
-  wrapper.addEventListener('click', (e) => {
-    if (e.target.closest('.reaction-emoji')) return;
+  // 📱 Mobile: tap to toggle tray
+  if (window.innerWidth <= 600) {
+    let autoHideTimer = null;
 
-    // Close all other trays
-    document.querySelectorAll('.reaction-tray.show').forEach(t => {
-      t.classList.remove('show');
-      t.classList.remove('hide');
+    wrapper.addEventListener('click', (e) => {
+      if (e.target.closest('.reaction-emoji')) return;
+
+      // Close all other trays
+      document.querySelectorAll('.reaction-tray.show').forEach(t => {
+        t.classList.remove('show');
+        t.classList.remove('hide');
+      });
+
+      tray.classList.add('show');
+      tray.classList.remove('hide');
+      e.stopPropagation();
+
+      // Clear any previous timer
+      if (autoHideTimer) clearTimeout(autoHideTimer);
+
+      // ⏱️ Auto-hide after 4s
+      autoHideTimer = setTimeout(() => {
+        tray.classList.remove('show');
+        tray.classList.add('hide');
+
+        setTimeout(() => {
+          tray.classList.remove('hide');
+        }, 500);
+      }, 4000);
     });
 
-    tray.classList.add('show');
-    tray.classList.remove('hide');
-    e.stopPropagation();
-
-    // Clear any previous timer
-    if (autoHideTimer) clearTimeout(autoHideTimer);
-
-    // ⏱️ Set auto-hide after 4s
-    autoHideTimer = setTimeout(() => {
+    // Tap outside to close immediately
+    document.addEventListener('click', () => {
       tray.classList.remove('show');
       tray.classList.add('hide');
-
-      // Cleanup hide class after animation ends
-      setTimeout(() => {
-        tray.classList.remove('hide');
-      }, 500);
-    }, 4000);
-  });
-
-  // Tap outside to close immediately
-  document.addEventListener('click', () => {
-    tray.classList.remove('show');
-    tray.classList.add('hide');
-    if (autoHideTimer) clearTimeout(autoHideTimer);
-
-    setTimeout(() => {
-      tray.classList.remove('hide');
-    }, 500);
-  }, { once: true });
-}
+      if (autoHideTimer) clearTimeout(autoHideTimer);
+      setTimeout(() => tray.classList.remove('hide'), 500);
+    }, { once: true });
+  }
 
   if (isAdmin) addDeleteButton(wrapper);
   if (prepend) wall.prepend(wrapper);
@@ -403,7 +418,6 @@ submitBtn.addEventListener('click', async () => {
   const mood = moodSelect.value;
   let type, text, image;
 
-  // Check which tab is active and collect data
   if (writeTab.classList.contains('active')) {
     text = textArea.value.trim();
     if (!text) return alert('Write something first!');
@@ -447,3 +461,4 @@ window.addEventListener('DOMContentLoaded', () => {
   updateCountdown();
   setInterval(updateCountdown, 60000);
 });
+
