@@ -1,1 +1,0 @@
-/share/:id   https://api.scribsy.io/share/:id   200

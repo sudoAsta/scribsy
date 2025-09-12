@@ -1,0 +1,6 @@
+# Proxy share pages from main site to API (bots see OG, humans redirect)
+# Example: https://scribsy.io/share/abc123 → https://api.scribsy.io/share/abc123
+/share/:id   https://api.scribsy.io/share/:id   200
+
+# Back-compat: if any old links point to /p/:id, redirect them to /share/:id
+/p/:id       /share/:id                        301
