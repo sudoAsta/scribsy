@@ -442,6 +442,26 @@ body:not(.admin-mode) .post-delete {
   display: none;
 }
 
+.post-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.share-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  background: #ffd158;
+  color: #000;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform .12s ease, opacity .2s ease;
+}
+.share-btn:hover { transform: translateY(-1px); }
+.share-btn:active { transform: translateY(0); opacity: .9; }
+
 /* === Reaction Tray === */
 .reaction-tray {
   position: absolute;

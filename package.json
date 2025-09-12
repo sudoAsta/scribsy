@@ -13,7 +13,10 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "express-rate-limit": "^7.5.0",
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "satori": "^0.18.2",
+    "yoga-layout-prebuilt": "^1.10.0"
   }
 }
