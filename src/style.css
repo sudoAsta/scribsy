@@ -480,6 +480,28 @@ body:not(.admin-mode) .post-delete {
   opacity: .85;
 }
 
+/* Share icon inside reaction tray */
+.reaction-emoji--share {
+  position: relative;
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px solid #eee;   /* subtle divider from emojis */
+  opacity: .85;
+}
+.reaction-emoji--share:hover { opacity: 1; transform: scale(1.1); }
+
+/* Vertical tray on mobile: divider becomes top border */
+@media (max-width: 600px) {
+  .reaction-emoji--share {
+    margin-left: 0;
+    margin-top: 6px;
+    padding-left: 0;
+    padding-top: 6px;
+    border-left: 0;
+    border-top: 1px solid #eee;
+  }
+}
+
 /* === Reaction Tray === */
 .reaction-tray {
   position: absolute;

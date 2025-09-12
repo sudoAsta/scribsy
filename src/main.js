@@ -100,7 +100,6 @@ function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
 
-// ✅ Mobile-friendly reaction tray + polished Share button
 function renderPost(post, prepend = false) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('post-wrapper');
@@ -122,55 +121,22 @@ function renderPost(post, prepend = false) {
     wrapper.append(img);
   }
 
-  // Footer (meta + actions)
+  // Footer (author + mood)
   const footer = document.createElement('div');
   footer.className = 'post-footer';
-
   const author = document.createElement('span');
   author.className = 'post-author';
   author.textContent = `by ${post.name}`;
-
-  const moodPill = document.createElement('span');
-  moodPill.className = `post-mood post-mood--${post.mood || 'default'}`;
-  moodPill.textContent = post.mood || 'default';
-
-  const actions = document.createElement('div');
-  actions.className = 'post-actions';
-
-  // ➡️ Share button (API /share/:id → bots see OG tags; humans redirect to homepage)
-  const shareBtn = document.createElement('button');
-  shareBtn.className = 'post-share';
-  shareBtn.setAttribute('aria-label', 'Share this post');
-  shareBtn.innerHTML = `<span class="icon">🔗</span>`;
-  shareBtn.addEventListener('click', async () => {
-    const shareUrl = `${API}/share/${post.id}`;
-    const shareData = {
-      title: 'Scribsy Post',
-      text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
-      url: shareUrl
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        alert('Link copied to clipboard!');
-      }
-    } catch {
-      await navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
-    }
-  });
-
-  actions.append(moodPill, shareBtn);
-  footer.append(author, actions);
+  const pill = document.createElement('span');
+  pill.className = `post-mood post-mood--${post.mood || 'default'}`;
+  pill.textContent = post.mood || 'default';
+  footer.append(author, pill);
   wrapper.append(footer);
 
   // Reaction counts
   const countBar = document.createElement('div');
   countBar.className = 'reaction-count-bar';
   wrapper.append(countBar);
-
   function updateReactionCounts(reactions) {
     countBar.innerHTML = '';
     Object.entries(reactions).forEach(([emoji, count]) => {
@@ -184,7 +150,7 @@ function renderPost(post, prepend = false) {
   }
   if (post.reactions) updateReactionCounts(post.reactions);
 
-  // Reaction tray
+  // Reaction tray (now also contains Share icon)
   const tray = document.createElement('div');
   tray.className = 'reaction-tray';
   const emojis = ['🔥','❤️','😂','😢','😡','💩'];
@@ -192,7 +158,8 @@ function renderPost(post, prepend = false) {
     const btn = document.createElement('button');
     btn.className = 'reaction-emoji';
     btn.textContent = emoji;
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       try {
         const res = await fetch(`${API}/api/posts/${post.id}/react`, {
           method: 'POST',
@@ -206,6 +173,33 @@ function renderPost(post, prepend = false) {
     });
     tray.append(btn);
   });
+
+  // 🔗 Share icon (icon-only, aligned with tray)
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'reaction-emoji reaction-emoji--share';
+  shareBtn.textContent = '🔗';
+  shareBtn.title = 'Share';
+  shareBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const shareUrl = `${API}/share/${post.id}`;
+    const shareData = {
+      title: 'Scribsy Post',
+      text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
+      url: shareUrl
+    };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      }
+    } catch {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied to clipboard!');
+    }
+  });
+  tray.append(shareBtn);
+
   wrapper.append(tray);
 
   // 📱 Mobile: tap to toggle tray (unchanged)
@@ -213,24 +207,24 @@ function renderPost(post, prepend = false) {
     let autoHideTimer = null;
     wrapper.addEventListener('click', (e) => {
       if (e.target.closest('.reaction-emoji')) return;
-      document.querySelectorAll('.reaction-tray.show').forEach(t => { t.classList.remove('show','hide'); });
+      document.querySelectorAll('.reaction-tray.show').forEach(t => t.classList.remove('show','hide'));
       tray.classList.add('show');
       tray.classList.remove('hide');
       e.stopPropagation();
       if (autoHideTimer) clearTimeout(autoHideTimer);
-      autoHideTimer = setTimeout(() => { tray.classList.remove('show'); tray.classList.add('hide'); setTimeout(() => tray.classList.remove('hide'), 500); }, 4000);
+      autoHideTimer = setTimeout(() => {
+        tray.classList.remove('show'); tray.classList.add('hide');
+        setTimeout(() => tray.classList.remove('hide'), 500);
+      }, 4000);
     });
     document.addEventListener('click', () => {
-      tray.classList.remove('show');
-      tray.classList.add('hide');
-      if (autoHideTimer) clearTimeout(autoHideTimer);
+      tray.classList.remove('show'); tray.classList.add('hide');
       setTimeout(() => tray.classList.remove('hide'), 500);
     }, { once: true });
   }
 
   if (isAdmin) addDeleteButton(wrapper);
-  if (prepend) wall.prepend(wrapper);
-  else wall.append(wrapper);
+  if (prepend) wall.prepend(wrapper); else wall.append(wrapper);
   requestAnimationFrame(() => wrapper.classList.add('visible'));
 }
 
@@ -320,7 +314,7 @@ canvas.addEventListener('touchend', stopDrawing);
 // Submit a post
 submitBtn.addEventListener('click', async () => {
   if (postCount >= MAX_POSTS) return alert(`Max ${MAX_POSTS} posts reached.`);
-  const name = nameInput.value.trim() || 'Anon';
+  const name = nameInput.value.trim() || 'Anonymous';
   const mood = moodSelect.value;
   let type, text, image;
 
