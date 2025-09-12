@@ -442,25 +442,43 @@ body:not(.admin-mode) .post-delete {
   display: none;
 }
 
+/* Share button + actions (clean pill, subtle shadow) */
 .post-actions {
-  margin-top: 8px;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
 
-.share-btn {
-  padding: 6px 10px;
-  border: none;
+.post-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
-  cursor: pointer;
-  background: #ffd158;
-  color: #000;
-  box-shadow: 0 1px 3px rgba(0,0,0,.2);
-  transition: transform .12s ease, opacity .2s ease;
+  background: #ffffff;
+  color: #874800;                 /* matches Scribsy browns */
+  border: 1px solid #E8D9C8;      /* soft outline */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.share-btn:hover { transform: translateY(-1px); }
-.share-btn:active { transform: translateY(0); opacity: .9; }
+
+.post-share:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.14);
+  background: #fffef7;
+}
+
+.post-share:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.post-share .icon {
+  font-size: 14px;
+  line-height: 1;
+  opacity: .85;
+}
 
 /* === Reaction Tray === */
 .reaction-tray {

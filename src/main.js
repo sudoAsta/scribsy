@@ -100,7 +100,7 @@ function randomRotation() {
   return Math.floor(Math.random() * 10) - 5;
 }
 
-// ✅ Render post with reactions + share
+// ✅ Mobile-friendly reaction tray + polished Share button
 function renderPost(post, prepend = false) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('post-wrapper');
@@ -122,17 +122,51 @@ function renderPost(post, prepend = false) {
     wrapper.append(img);
   }
 
+  // Footer (meta + actions)
   const footer = document.createElement('div');
   footer.className = 'post-footer';
+
   const author = document.createElement('span');
   author.className = 'post-author';
   author.textContent = `by ${post.name}`;
-  const pill = document.createElement('span');
-  pill.className = `post-mood post-mood--${post.mood || 'default'}`;
-  pill.textContent = post.mood;
-  footer.append(author, pill);
+
+  const moodPill = document.createElement('span');
+  moodPill.className = `post-mood post-mood--${post.mood || 'default'}`;
+  moodPill.textContent = post.mood || 'default';
+
+  const actions = document.createElement('div');
+  actions.className = 'post-actions';
+
+  // ➡️ Share button (API /share/:id → bots see OG tags; humans redirect to homepage)
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'post-share';
+  shareBtn.setAttribute('aria-label', 'Share this post');
+  shareBtn.innerHTML = `<span class="icon">🔗</span><span>Share</span>`;
+  shareBtn.addEventListener('click', async () => {
+    const shareUrl = `${API}/share/${post.id}`;
+    const shareData = {
+      title: 'Scribsy Post',
+      text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
+      url: shareUrl
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      }
+    } catch {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied to clipboard!');
+    }
+  });
+
+  actions.append(moodPill, shareBtn);
+  footer.append(author, actions);
   wrapper.append(footer);
 
+  // Reaction counts
   const countBar = document.createElement('div');
   countBar.className = 'reaction-count-bar';
   wrapper.append(countBar);
@@ -148,13 +182,12 @@ function renderPost(post, prepend = false) {
       }
     });
   }
-
   if (post.reactions) updateReactionCounts(post.reactions);
 
+  // Reaction tray
   const tray = document.createElement('div');
   tray.className = 'reaction-tray';
   const emojis = ['🔥','❤️','😂','😢','😡','💩'];
-
   emojis.forEach(emoji => {
     const btn = document.createElement('button');
     btn.className = 'reaction-emoji';
@@ -169,40 +202,13 @@ function renderPost(post, prepend = false) {
         const data = await res.json();
         if (data.reactions) updateReactionCounts(data.reactions);
         tray.classList.remove('show');
-      } catch (err) {
-        console.error('Reaction error:', err);
-      }
+      } catch (err) { console.error('Reaction error:', err); }
     });
     tray.append(btn);
   });
   wrapper.append(tray);
 
-  // ➡️ Share button (points to API /p/:id so scrapers see OG tags; humans get redirected to homepage)
-  const shareBtn = document.createElement('button');
-  shareBtn.className = 'post-share';
-  shareBtn.textContent = '🔗 Share';
-  shareBtn.addEventListener('click', async () => {
-    const shareUrl = `${API}/share/${post.id}`;
-    const shareData = {
-      title: 'Scribsy Post',
-      text: post.type === 'text' && post.text ? `"${post.text}" — Scribsy` : 'Scribsy – Write & draw anonymously',
-      url: shareUrl
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        alert('Link copied to clipboard!');
-      }
-    } catch (err) {
-      await navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
-    }
-  });
-  wrapper.append(shareBtn);
-
-  // Mobile tray logic
+  // 📱 Mobile: tap to toggle tray (unchanged)
   if (window.innerWidth <= 600) {
     let autoHideTimer = null;
     wrapper.addEventListener('click', (e) => {
