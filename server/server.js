@@ -145,39 +145,59 @@ app.post('/api/archive-now', async (_, res) => {
   res.json({ success: true });
 });
 
-// ─── OG Image route with dynamic import fallback ───────
+// ─── OG Image route with fonts & caching ───────
 app.get('/og/:id.png', async (req, res) => {
   try {
     const { default: satori } = await import('satori').catch(() => ({}));
     const { Resvg } = await import('@resvg/resvg-js').catch(() => ({}));
-
     if (!satori || !Resvg) {
       console.warn('OG image libraries not available, using fallback.');
       return res.redirect(302, 'https://scribsy.io/og-image.png');
     }
 
+    // Lazy, in-memory font cache (Render dynos can make outbound requests)
+    globalThis.__scribsyFonts ||= {};
+    const fonts = globalThis.__scribsyFonts;
+
+    async function loadFontsOnce() {
+      if (fonts.ready) return;
+      const [interReg, interBold, emoji] = await Promise.all([
+        fetch('https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Regular.ttf').then(r => r.arrayBuffer()),
+        fetch('https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Bold.ttf').then(r => r.arrayBuffer()),
+        // Monochrome emoji TTF (works well with satori/resvg)
+        fetch('https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoEmoji-Regular.ttf')
+          .then(r => r.arrayBuffer())
+          .catch(() => null)
+      ]);
+      fonts.interReg = Buffer.from(interReg);
+      fonts.interBold = Buffer.from(interBold);
+      fonts.emoji = emoji ? Buffer.from(emoji) : null;
+      fonts.ready = true;
+    }
+
+    await loadFontsOnce();
+
     const id = req.params.id;
     let post;
 
-    // Try live posts first
+    // Try live post
     const live = await firestore.collection('posts').doc(id).get();
-    if (live.exists) {
-      post = live.data();
-    } else {
-      // Then archives
+    if (live.exists) post = live.data();
+
+    // Fall back to archives
+    if (!post) {
       const archivesSnap = await firestore.collection('archives').get();
       for (const doc of archivesSnap.docs) {
-        const data = doc.data();
-        const hit = (data.posts || []).find(p => p.id === id);
+        const hit = (doc.data().posts || []).find(p => p.id === id);
         if (hit) { post = hit; break; }
       }
     }
 
     if (!post) return res.status(404).send('Not found');
 
-    const text = post.text || 'Scribsy Post';
-    const name = post.name || 'Anonymous';
-    const mood = post.mood || 'default';
+    const text = (post.text || 'Scribsy Post').toString();
+    const name = (post.name || 'Anonymous').toString();
+    const mood = (post.mood || 'default').toString();
 
     const svg = await satori(
       {
@@ -188,92 +208,122 @@ app.get('/og/:id.png', async (req, res) => {
             height: 630,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: 'space-between',
             background: 'linear-gradient(180deg,#0b1023,#1b2735 60%,#090a0f)',
-            color: 'white',
-            fontSize: 48,
-            textAlign: 'center',
-            padding: '40px'
+            color: '#fff',
+            padding: 64
           },
           children: [
-            text ? `“${text}”` : 'Scribsy Post',
-            `by ${name} • ${mood}`
+            {
+              type: 'div',
+              props: {
+                style: {
+                  fontSize: 54,
+                  lineHeight: 1.2,
+                  whiteSpace: 'pre-wrap'
+                },
+                children: `“${text}”`
+              }
+            },
+            {
+              type: 'div',
+              props: {
+                style: {
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: 28
+                },
+                children: [
+                  `by ${name} • ${mood}`,
+                  {
+                    type: 'div',
+                    props: {
+                      style: { fontSize: 24, opacity: 0.8 },
+                      children: 'scribsy.io'
+                    }
+                  }
+                ]
+              }
+            }
           ]
         }
       },
-      { width: 1200, height: 630 }
+      {
+        width: 1200,
+        height: 630,
+        fonts: [
+          { name: 'Inter', data: fonts.interReg, weight: 400, style: 'normal' },
+          { name: 'Inter', data: fonts.interBold, weight: 700, style: 'bold' },
+          ...(fonts.emoji ? [{ name: 'Noto Emoji', data: fonts.emoji, weight: 400, style: 'normal' }] : [])
+        ]
+      }
     );
 
     const png = new Resvg(svg).render().asPng();
     res.setHeader('Content-Type', 'image/png');
-    res.end(png);
+    res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
+    return res.end(png);
   } catch (err) {
     console.error('OG generation failed:', err);
-    res.redirect(302, 'https://scribsy.io/og-image.png');
+    return res.redirect(302, 'https://scribsy.io/og-image.png');
   }
 });
 
-// ─── Per-post HTML route with OG tags (scrapers) + redirect (humans) ───────
+// ─── Per-post HTML route with safe OG tags & redirect ───────
 app.get('/p/:id', async (req, res) => {
   const id = req.params.id;
-  let post;
 
+  function escapeHtml(s = '') {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  let post;
   const live = await firestore.collection('posts').doc(id).get();
-  if (live.exists) {
-    post = live.data();
-  } else {
+  if (live.exists) post = live.data();
+  if (!post) {
     const archivesSnap = await firestore.collection('archives').get();
     for (const doc of archivesSnap.docs) {
-      const data = doc.data();
-      const hit = (data.posts || []).find(p => p.id === id);
+      const hit = (doc.data().posts || []).find(p => p.id === id);
       if (hit) { post = hit; break; }
     }
   }
-
   if (!post) return res.status(404).send('Not found');
 
-  const clickThru = 'https://scribsy.io';                   // where humans land
-  const ogImg     = `https://api.scribsy.io/og/${id}.png`;  // per-post image
-  const title     = 'Scribsy Post';
-  const desc      = (post.text || 'Anonymous post').slice(0, 180).replace(/"/g, '&quot;');
+  const desc = escapeHtml((post.text || 'Anonymous post').slice(0, 200));
+  const ogUrl = `https://api.scribsy.io/og/${id}.png`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-
-  <link rel="canonical" href="${clickThru}" />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="${title}" />
+  <title>Scribsy Post</title>
+  <meta property="og:title" content="Scribsy Post" />
   <meta property="og:description" content="${desc}" />
-  <meta property="og:image" content="${ogImg}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image" content="${ogUrl}" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="${clickThru}" />
-
-  <!-- Twitter -->
+  <meta property="og:url" content="https://scribsy.io/p/${id}" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:title" content="Scribsy Post" />
   <meta name="twitter:description" content="${desc}" />
-  <meta name="twitter:image" content="${ogImg}" />
-
-  <!-- Redirect humans quickly -->
-  <meta http-equiv="refresh" content="0; url=${clickThru}">
+  <meta name="twitter:image" content="${ogUrl}" />
 </head>
 <body>
-  <p>Redirecting… <a href="${clickThru}">Go to Scribsy</a></p>
-  <script>window.location.replace('${clickThru}');</script>
+  <p>Redirecting… <a href="https://scribsy.io">Go to Scribsy</a></p>
+  <script>window.location.replace('https://scribsy.io');</script>
 </body>
 </html>`;
 
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Type', 'text/html');
   res.send(html);
 });
+
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
