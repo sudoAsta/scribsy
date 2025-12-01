@@ -23,7 +23,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        past: resolve(__dirname, 'past.html')
+        past: resolve(__dirname, 'past.html'),
+        letters: resolve(__dirname, 'letters.html')
       }
     }
   }
