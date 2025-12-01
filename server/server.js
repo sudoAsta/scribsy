@@ -31,6 +31,13 @@ const postLimiter = rateLimit({
   message: { error: 'Too many posts from this IP. Please try again later.' }
 });
 
+// Letters: long-form, slower pace: 5 letters / day / IP
+const letterLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many Letters from this IP today. Please try again tomorrow.' }
+});
+
 // ─── Tiny in-memory token store (24h expiry) ───
 const sessions = new Map(); // token -> expiry timestamp
 function issueToken() {
@@ -185,6 +192,150 @@ app.get('/api/archives', async (_, res) => {
 app.post('/api/archive-now', async (_, res) => {
   await archiveNow();
   res.json({ success: true });
+});
+
+// ─── Letters: long-form posts (no reset) ─────────────────────
+
+// Get Letters with optional mood filter + pagination
+// Get Letters with optional mood filter + pagination
+app.get('/api/letters', async (req, res) => {
+  try {
+    const { cursor, mood, limit } = req.query;
+    const pageSize = Math.min(Number(limit) || 20, 50); // cap at 50
+
+    // If filtering by mood, use a simpler query (no composite index needed)
+    if (mood && mood !== 'all') {
+      let query = firestore.collection('letters')
+        .where('mood', '==', mood);
+
+      const snap = await query.get();
+      let letters = snap.docs.map(doc => doc.data());
+
+      // sort newest → oldest in memory
+      letters.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      // simple page slice (no infinite scroll for filtered view for now)
+      const page = letters.slice(0, pageSize);
+
+      return res.json({
+        letters: page,
+        nextCursor: null
+      });
+    }
+
+    // "All moods" → keep fast paginated path
+    let query = firestore.collection('letters')
+      .orderBy('createdAt', 'desc');
+
+    if (cursor) {
+      query = query.startAfter(Number(cursor));
+    }
+
+    const snap = await query.limit(pageSize).get();
+    const letters = snap.docs.map(doc => doc.data());
+    const nextCursor =
+      letters.length > 0 ? letters[letters.length - 1].createdAt : null;
+
+    return res.json({ letters, nextCursor });
+  } catch (err) {
+    console.error('Error fetching letters:', err);
+    res.status(500).json({ error: 'Failed to load letters' });
+  }
+});
+
+// Create a new Letter
+app.post('/api/letters', letterLimiter, async (req, res) => {
+  try {
+    const { text, name, mood } = req.body || {};
+
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Please write something.' });
+    }
+
+    const trimmed = text.trim();
+    if (trimmed.length < 20) {
+      return res.status(400).json({ error: 'Write at least 20 characters for a Letter.' });
+    }
+    if (trimmed.length > 5000) {
+      return res.status(400).json({ error: 'Letters are limited to 5000 characters.' });
+    }
+
+    const letter = {
+      id: nanoid(),
+      text: trimmed,
+      name: (name && name.trim()) || 'Anonymous',
+      mood: mood || 'default',
+      createdAt: Date.now(),
+      reactions: {},
+      flags: 0,
+    };
+
+    await firestore.collection('letters').doc(letter.id).set(letter);
+    res.status(201).json(letter);
+  } catch (err) {
+    console.error('Error creating letter:', err);
+    res.status(500).json({ error: 'Failed to create Letter' });
+  }
+});
+
+// React to a Letter
+app.post('/api/letters/:id/react', async (req, res) => {
+  try {
+    const { emoji } = req.body || {};
+    const { id } = req.params;
+
+    if (!emoji || typeof emoji !== 'string') {
+      return res.status(400).json({ error: 'Invalid emoji' });
+    }
+
+    const ref = firestore.collection('letters').doc(id);
+    const doc = await ref.get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Letter not found' });
+    }
+
+    const data = doc.data();
+    data.reactions ||= {};
+    data.reactions[emoji] = (data.reactions[emoji] || 0) + 1;
+
+    await ref.set(data);
+    res.json({ success: true, reactions: data.reactions });
+  } catch (err) {
+    console.error('Error reacting to letter:', err);
+    res.status(500).json({ error: 'Failed to react to Letter' });
+  }
+});
+
+// Report / flag a Letter
+app.post('/api/letters/:id/report', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ref = firestore.collection('letters').doc(id);
+    const doc = await ref.get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Letter not found' });
+    }
+
+    const data = doc.data();
+    data.flags = (data.flags || 0) + 1;
+
+    await ref.set(data);
+    res.json({ success: true, flags: data.flags });
+  } catch (err) {
+    console.error('Error reporting letter:', err);
+    res.status(500).json({ error: 'Failed to report Letter' });
+  }
+});
+
+// Admin delete Letter (optional, mirrors post delete)
+app.delete('/api/letters/:id', requireAdmin, async (req, res) => {
+  try {
+    await firestore.collection('letters').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting letter:', err);
+    res.status(500).json({ error: 'Failed to delete Letter' });
+  }
 });
 
 // ─── OG Image: /og/:id.png ─────────────────────

@@ -118,6 +118,29 @@ h1 {
   margin: 0;
 }
 
+.letters-link {
+  margin-right: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-style: italic;
+  color: #C9C3B8; /* lighter so it’s readable on dark bg */
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.letters-link:hover {
+  color: #FFF;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
 /* === Buttons === */
 button {
   font-family: inherit;
