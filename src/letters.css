@@ -1322,6 +1322,69 @@ body:not(.admin-mode) .letter-delete-btn {
   color: #9C9385;
 }
 
+/* Mobile layout for bottom dock */
+@media (max-width: 640px) {
+  .letters-dock {
+    bottom: 12px;
+    justify-content: center;
+  }
+
+  /* Make center group use the width so pill isn't tiny */
+  .letters-dock-center {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .letters-dock-group {
+    width: calc(100% - 82px); /* leave space for the back icon on the right */
+    max-width: 520px;
+    justify-content: space-between;
+  }
+
+  /* Glass pill becomes multi-line */
+  .letters-dock-inner {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  /* Logo + "Letters" on first line */
+  .letters-dock-left {
+    flex: 0 0 100%;
+  }
+
+  /* Moods on second line, can wrap */
+  .letters-dock-moods {
+    flex: 0 0 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: 4px;
+  }
+
+  .letters-dock-mood {
+    padding-inline: 8px;
+    font-size: 0.72rem;
+  }
+
+  .letters-dock-logo {
+    font-size: 0.82rem;
+  }
+
+  /* Icons a bit smaller so they don't dominate */
+  .letters-dock-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  .letters-dock-back {
+    margin-right: 10px;
+  }
+}
+
 @media (max-width: 480px) {
   /* Hero text: slightly smaller + tighter */
   .letters-hero-inner {

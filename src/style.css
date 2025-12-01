@@ -148,6 +148,17 @@ h1 {
   transform: translateY(-1px);
 }
 
+.letters-new-sup {
+  background: #FFDD57;
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.55rem;
+  font-weight: 600;
+  top: -2px;
+  position: relative;
+}
+
 /* === Buttons === */
 button {
   font-family: inherit;
