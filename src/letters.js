@@ -212,6 +212,15 @@ function buildComposeModal() {
   closeBtn.addEventListener('click', closeComposeModal);
 
   submitEl.addEventListener('click', async () => {
+    const textEl  = document.getElementById('letter-text');
+    const nameEl  = document.getElementById('letter-name');
+    const moodEl  = document.getElementById('letter-mood');
+
+    if (!textEl || !nameEl || !moodEl) {
+      alert('Letters form did not load correctly. Please refresh the page.');
+      return;
+    }
+
     const text = textEl.value.trim();
     if (text.length < 20) {
       alert('Please write at least 20 characters for a Letter.');
