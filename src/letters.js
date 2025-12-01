@@ -155,12 +155,16 @@ function buildComposeModal() {
   if (composeBuilt) return;
   composeBuilt = true;
 
+  // Inject modal HTML once
   composeContent.innerHTML = `
     <button id="compose-close" class="letters-modal-close">✕</button>
 
     <h2 class="letters-modal-title">Write a Letter</h2>
     <p class="letters-modal-desc">
-      This is your quiet corner of Scribsy — a space to breathe, unload, and say whatever sits heavy or loud in your mind. No judgment, no pressure, and your words will stay. Just write.
+      Here lies the quiet side of Scribsy — a place for deeper thoughts.
+      Write your Letter openly and anonymously. These words won’t disappear.
+      Share anything: rants, confessions, love letters, apologies, reflections, stories —
+      even letters to the universe.
     </p>
 
     <textarea id="letter-text"
@@ -177,13 +181,13 @@ function buildComposeModal() {
         type="text"
         placeholder="Name (optional)" />
 
-      <select id="compose-mood" class="letters-select">
-        <option value="" disabled selected>Select mood</option>
-        <option value="Dreamy">💭 Dreamy</option>
-        <option value="Happy">🙂 Happy</option>
-        <option value="Sad">😭 Sad</option>
-        <option value="Meh">😐 Meh</option>
-        <option value="Rant">😤 Rant</option>
+      <select id="letter-mood" class="letters-select">
+        <option value="">Select mood (optional)</option>
+        <option value="Dreamy">Dreamy</option>
+        <option value="Happy">Happy</option>
+        <option value="Sad">Sad</option>
+        <option value="Meh">Meh</option>
+        <option value="Rant">Rant</option>
       </select>
     </div>
 
@@ -192,12 +196,20 @@ function buildComposeModal() {
     </button>
   `;
 
-  const textEl   = document.getElementById('letter-text');
-  const countEl  = document.getElementById('letter-char-count');
-  const nameEl   = document.getElementById('letter-name');
-  const moodEl   = document.getElementById('letter-mood');
-  const submitEl = document.getElementById('letter-submit');
-  const closeBtn = document.getElementById('compose-close');
+  // 🔍 IMPORTANT: scope queries to the composeContent
+  const textEl   = composeContent.querySelector('#letter-text');
+  const countEl  = composeContent.querySelector('#letter-char-count');
+  const nameEl   = composeContent.querySelector('#letter-name');
+  const moodEl   = composeContent.querySelector('#letter-mood');
+  const submitEl = composeContent.querySelector('#letter-submit');
+  const closeBtn = composeContent.querySelector('#compose-close');
+
+  if (!textEl || !countEl || !nameEl || !moodEl || !submitEl || !closeBtn) {
+    console.error('Letters compose modal elements missing:', {
+      textEl, countEl, nameEl, moodEl, submitEl, closeBtn
+    });
+    return;
+  }
 
   textEl.value = '';
   countEl.textContent = '0 / 5000';
@@ -212,15 +224,6 @@ function buildComposeModal() {
   closeBtn.addEventListener('click', closeComposeModal);
 
   submitEl.addEventListener('click', async () => {
-    const textEl  = document.getElementById('letter-text');
-    const nameEl  = document.getElementById('letter-name');
-    const moodEl  = document.getElementById('letter-mood');
-
-    if (!textEl || !nameEl || !moodEl) {
-      alert('Letters form did not load correctly. Please refresh the page.');
-      return;
-    }
-
     const text = textEl.value.trim();
     if (text.length < 20) {
       alert('Please write at least 20 characters for a Letter.');
