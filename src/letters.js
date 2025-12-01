@@ -183,11 +183,11 @@ function buildComposeModal() {
 
       <select id="letter-mood" class="letters-select">
         <option value="">Select mood (optional)</option>
-        <option value="Dreamy">Dreamy</option>
-        <option value="Happy">Happy</option>
-        <option value="Sad">Sad</option>
-        <option value="Meh">Meh</option>
-        <option value="Rant">Rant</option>
+        <option value="Dreamy">💭 Dreamy</option>
+        <option value="Happy">🙂 Happy</option>
+        <option value="Sad">😭 Sad</option>
+        <option value="Meh">😐 Meh</option>
+        <option value="Rant">😤 Rant</option>
       </select>
     </div>
 
