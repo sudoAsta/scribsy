@@ -7,7 +7,9 @@ body.letters {
   background: #FAF7F2;
   color: #5E5B55;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding-bottom: 110px; /* keep content clear of fixed dock on all screens */
 }
+
 
 body.letters.letters-modal-open {
   overflow: hidden;
@@ -35,6 +37,7 @@ body.letters.letters-splash-active {
   text-align: center;
   opacity: 1;
   transition: opacity 600ms ease;
+  box-sizing: border-box;
 }
 
 /* When hidden (after JS timeout) */
@@ -1215,6 +1218,7 @@ body:not(.admin-mode) .letter-delete-btn {
 
   .letters-dock-moods {
     gap: 4px;
+    flex-wrap: wrap;
   }
 
   .letters-dock-mood {
@@ -1317,3 +1321,109 @@ body:not(.admin-mode) .letter-delete-btn {
 .letters-modal-content .letters-input::placeholder {
   color: #9C9385;
 }
+
+@media (max-width: 480px) {
+  /* Hero text: slightly smaller + tighter */
+  .letters-hero-inner {
+    max-width: 100%;
+    padding-inline: 12px;
+  }
+
+  .letters-hero-title {
+    font-size: 2.1rem;          /* clamp still applies, but this caps it lower */
+  }
+
+  .letters-hero-sub {
+    font-size: 0.9rem;
+  }
+
+  /* Grid padding a bit tighter on tiny screens */
+  #letter-grid {
+    padding-inline: 14px;
+    padding-top: 20px;
+  }
+
+  /* Modal: edge-to-edge feeling */
+  .letters-modal-content {
+    max-width: 100%;
+    padding: 18px 16px;
+    border-radius: 14px;
+    max-height: calc(100vh - 24px);
+  }
+
+  /* Dock: keep center pill from feeling too wide */
+  .letters-dock-inner {
+    max-width: calc(100% - 80px); /* leaves room for the back button area */
+  }
+
+  .letters-dock-moods {
+    justify-content: flex-start;
+  }
+
+   .letter-card {
+    padding: 16px 16px 14px;
+    border-radius: 14px;
+  }
+}
+
+/* Tablets & small laptops */
+@media (max-width: 900px) {
+  .letters-hero-splash {
+    padding: 24px 16px;
+  }
+
+  .letters-hero-inner {
+    max-width: 100%;
+  }
+}
+
+/* Phones */
+@media (max-width: 720px) {
+  .letters-hero-splash {
+    align-items: flex-start;        /* content starts from top */
+    justify-content: center;
+    padding: 24px 16px 18px;
+    text-align: left;               /* friendlier on mobile */
+    overflow-y: auto;               /* ✅ allow vertical scroll if needed */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .letters-hero-inner {
+    max-width: 100%;
+    margin-top: 24px;
+  }
+
+  .letters-hero-title {
+    font-size: clamp(1.9rem, 7vw, 2.4rem);
+    line-height: 1.1;
+  }
+
+  .letters-hero-sub {
+    font-size: 0.95rem;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 480px) {
+  .letters-hero-splash {
+    padding: 18px 12px 14px;
+  }
+
+  .letters-hero-inner {
+    margin-top: 18px;
+  }
+
+  .letters-hero-title {
+    font-size: clamp(1.7rem, 7.4vw, 2.1rem);
+  }
+
+  /* Allow wrapping so it doesn't go off-screen */
+  .letters-hero-title-text {
+    white-space: normal;           /* overrides nowrap on tiny screens */
+  }
+
+  .letters-hero-sub {
+    font-size: 0.9rem;
+  }
+}
+

@@ -1,141 +1,164 @@
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scribsy — Anonymous Letters</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scribsy Letters — Anonymous Deeper Writing</title>
 
-  <meta name="description"
-        content="Write anonymous letters, rants, confessions, apologies, love letters and reflections that don’t disappear. Letters is the quieter side of Scribsy for deeper writing." />
+    <meta name="description"
+          content="Write anonymous letters, rants, confessions, apologies, love letters and reflections that don’t disappear. Letters is the quieter side of Scribsy for deeper writing." />
 
-  <link rel="canonical" href="https://scribsy.io/letters" />
+    <meta name="google-site-verification" content="-D0x_qalwtTgegJ_zWP6Jf1Mmkqv9KAMHOUW4QZPVcM" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Let search engines index this page -->
+    <meta name="robots" content="index,follow" />
 
-  <!-- Existing fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&family=Lily+Script+One&display=swap" rel="stylesheet" />
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://scribsy.io/letters" />
 
-  <!-- Add Playfair Display (for Letters hero title) -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <meta name="google-site-verification" content="-D0x_qalwtTgegJ_zWP6Jf1Mmkqv9KAMHOUW4QZPVcM" />
+    <!-- Existing fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300..800&family=Lily+Script+One&display=swap" rel="stylesheet" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="Scribsy Letters — Anonymous Deeper Writing" />
-  <meta property="og:description"
-        content="Share anonymous letters, confessions, rants and reflections that stay. A quieter corner of Scribsy for deeper thoughts." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://scribsy.io/letters" />
-  <meta property="og:image" content="https://scribsy.io/og-image.png" />
+    <!-- Add Playfair Display (for Letters hero title) -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Scribsy Letters — Anonymous Deeper Writing" />
-  <meta name="twitter:description"
-        content="Write anonymous letters that don't vanish — rants, confessions, love letters and more." />
-  <meta name="twitter:image" content="https://scribsy.io/og-image.png" />
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Scribsy" />
+    <meta property="og:title" content="Scribsy Letters — Anonymous Deeper Writing" />
+    <meta property="og:description"
+          content="Share anonymous letters, confessions, rants and reflections that stay. A quieter corner of Scribsy for deeper thoughts." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://scribsy.io/letters" />
+    <meta property="og:image" content="https://scribsy.io/og-image.png" />
 
-  <link rel="stylesheet" href="/src/style.css" />
-  <link rel="stylesheet" href="/src/letters.css" />
-</head>
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Scribsy Letters — Anonymous Deeper Writing" />
+    <meta name="twitter:description"
+          content="Write anonymous letters that don't vanish — rants, confessions, love letters and more." />
+    <meta name="twitter:image" content="https://scribsy.io/og-image.png" />
 
-<body class="letters">
-   <!-- Splash hero overlay -->
-  <div id="letters-hero-splash" class="letters-hero-splash">
-    <div class="letters-hero-inner">
+    <!-- JSON-LD: describe this page as a collection of anonymous letters -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Scribsy Letters — Anonymous Deeper Writing",
+        "url": "https://scribsy.io/letters",
+        "description": "Write anonymous letters, confessions, rants, apologies and reflections that don’t disappear. Letters is the quieter, slower side of Scribsy.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Scribsy",
+          "url": "https://scribsy.io"
+        }
+      }
+    </script>
 
-      <h1 class="letters-hero-title">
-        <span class="letters-hero-title-text">
-          What whispers in your heart tonight?
-        </span>
-      </h1>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/letters.css" />
+  </head>
 
-      <p class="letters-hero-sub">
-        Write anonymous letters that live forever.
-      </p>
+  <body class="letters">
+    <!-- Splash hero overlay -->
+    <div id="letters-hero-splash" class="letters-hero-splash">
+      <div class="letters-hero-inner">
 
+        <h1 class="letters-hero-title">
+          <span class="letters-hero-title-text">
+            What whispers in your heart tonight?
+          </span>
+        </h1>
+
+        <p class="letters-hero-sub">
+          Write anonymous letters that live forever.
+        </p>
+
+      </div>
     </div>
-  </div>
 
-  <main class="letters-main">
-    <section id="letter-grid">
-      <!-- JS renders cards here -->
-    </section>
+    <main class="letters-main">
+      <section id="letter-grid">
+        <!-- JS renders cards here -->
+      </section>
 
-    <!-- Compose Letter modal -->
-    <div id="compose-modal" class="letters-modal">
-      <div class="letters-modal-content" id="compose-content"></div>
-    </div>
-
-    <!-- Read Letter modal -->
-    <div id="letter-modal" class="letters-modal">
-      <div class="letters-modal-content" id="modal-content"></div>
-    </div>
-
-    <!-- Floating bottom dock -->
-    <nav class="letters-dock">
-    
-      <!-- Center group: dock + write -->
-      <div class="letters-dock-center">
-        <div class="letters-dock-group">
-          <div class="letters-dock-inner">
-            <div class="letters-dock-left">
-              <div class="letters-dock-logo">Scribsy</div>
-              <div class="letters-dock-sub">/ Letters</div>
-            </div>
-
-            <div class="letters-dock-moods">
-              <button class="letters-dock-mood is-active"
-                      data-mood="all"
-                      data-tooltip="Show every Letter">
-                <span>🪄</span>All moods
-              </button>
-
-              <button class="letters-dock-mood"
-                      data-mood="Dreamy"
-                      data-tooltip="Soft, dreamy thoughts">
-                <span>💭</span>Dreamy
-              </button>
-
-              <button class="letters-dock-mood"
-                      data-mood="Happy"
-                      data-tooltip="Bright and light moments">
-                <span>🙂</span>Happy
-              </button>
-
-              <button class="letters-dock-mood"
-                      data-mood="Sad"
-                      data-tooltip="Heavy hearts & tears">
-                <span>😭</span>Sad
-              </button>
-
-              <button class="letters-dock-mood"
-                      data-mood="Meh"
-                      data-tooltip="Just… existing today">
-                <span>😐</span>Meh
-              </button>
-
-              <button class="letters-dock-mood"
-                      data-mood="Rant"
-                      data-tooltip="Let it all out">
-                <span>😤</span>Rant
-              </button>
-            </div>
-          </div>
-
-          <!-- Write icon -->
-          <button class="letters-dock-icon letters-dock-write" id="letters-dock-write">
-            <span class="letters-dock-write-icon">✏️</span>
-          </button>
-
-        </div>
+      <!-- Compose Letter modal -->
+      <div id="compose-modal" class="letters-modal">
+        <div class="letters-modal-content" id="compose-content"></div>
       </div>
 
-      <!-- Right: Back to wall -->
-      <a href="/" class="letters-dock-icon letters-dock-back" data-tooltip="Back to Wall">
-        <span class="letters-back-icon">↩</span>
-      </a>
-    </nav>
-  </main>
-  <script type="module" src="/src/letters.js"></script>
-</body>
+      <!-- Read Letter modal -->
+      <div id="letter-modal" class="letters-modal">
+        <div class="letters-modal-content" id="modal-content"></div>
+      </div>
+
+      <!-- Floating bottom dock -->
+      <nav class="letters-dock">
+      
+        <!-- Center group: dock + write -->
+        <div class="letters-dock-center">
+          <div class="letters-dock-group">
+            <div class="letters-dock-inner">
+              <div class="letters-dock-left">
+                <div class="letters-dock-logo">Scribsy</div>
+                <div class="letters-dock-sub">/ Letters</div>
+              </div>
+
+              <div class="letters-dock-moods">
+                <button class="letters-dock-mood is-active"
+                        data-mood="all"
+                        data-tooltip="Show every Letter">
+                  <span>🪄</span>All moods
+                </button>
+
+                <button class="letters-dock-mood"
+                        data-mood="Dreamy"
+                        data-tooltip="Soft, dreamy thoughts">
+                  <span>💭</span>Dreamy
+                </button>
+
+                <button class="letters-dock-mood"
+                        data-mood="Happy"
+                        data-tooltip="Bright and light moments">
+                  <span>🙂</span>Happy
+                </button>
+
+                <button class="letters-dock-mood"
+                        data-mood="Sad"
+                        data-tooltip="Heavy hearts & tears">
+                  <span>😭</span>Sad
+                </button>
+
+                <button class="letters-dock-mood"
+                        data-mood="Meh"
+                        data-tooltip="Just… existing today">
+                  <span>😐</span>Meh
+                </button>
+
+                <button class="letters-dock-mood"
+                        data-mood="Rant"
+                        data-tooltip="Let it all out">
+                  <span>😤</span>Rant
+                </button>
+              </div>
+            </div>
+
+            <!-- Write icon -->
+            <button class="letters-dock-icon letters-dock-write" id="letters-dock-write">
+              <span class="letters-dock-write-icon">✏️</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Right: Back to wall -->
+        <a href="/" class="letters-dock-icon letters-dock-back" data-tooltip="Back to Wall">
+          <span class="letters-back-icon">↩</span>
+        </a>
+      </nav>
+    </main>
+    <script type="module" src="/src/letters.js"></script>
+  </body>
 </html>
