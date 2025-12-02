@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         document.body.classList.remove('letters-splash-active');
       }, 650); // matches CSS transition duration
-    }, 6000); // ~4s: enough for most of the type effect
+    }, 4600); // ~4s: enough for most of the type effect
   }
 
   // ...existing letters.js setup (fetch, filters, etc.)...
