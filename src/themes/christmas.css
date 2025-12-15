@@ -1,0 +1,69 @@
+/* src/themes/christmas.css */
+
+html.theme-christmas body {
+  /* tiny warmth shift, but keep the night mood */
+  background-color: #0b0f1a;
+}
+
+/* Use existing sky layer as our theme canvas container */
+html.theme-christmas .sky {
+  z-index: -2; /* keep sky behind snow canvas */
+}
+
+/* Warm “candle haze” overlay (very subtle) */
+html.theme-christmas .sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(900px 500px at 50% 10%, rgba(255, 214, 140, 0.06), transparent 60%),
+    radial-gradient(700px 450px at 10% 30%, rgba(255, 120, 120, 0.04), transparent 60%),
+    radial-gradient(700px 450px at 90% 35%, rgba(120, 180, 255, 0.03), transparent 60%);
+
+  opacity: 1;
+  mix-blend-mode: screen;  /* makes it glow instead of whitening */
+}
+
+/* Snow-dust canvas */
+.christmas-snow-canvas {
+  background: transparent !important;
+  border: none !important;
+  position: fixed !important;
+  padding: 0 !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;
+  display: block !important;
+  pointer-events: none;
+  cursor: default;
+  z-index: -1;
+}
+
+/* Optional: slightly soften header/button glow on desktop */
+@media (min-width: 481px) {
+  html.theme-christmas #create-post {
+    /* keep your heartbeat, just a bit more magical */
+    box-shadow: 0 0 18px rgba(255, 241, 0, 0.18);
+  }
+}
+
+@media (min-width: 481px) {
+  html.theme-christmas body {
+    cursor: url("/cursors/snowflake-22.png") 12 12, auto;
+  }
+
+  /* Keep text inputs normal so typing feels normal */
+  html.theme-christmas input,
+  html.theme-christmas textarea {
+    cursor: text;
+  }
+
+  /* Buttons/links still feel clickable */
+  html.theme-christmas button,
+  html.theme-christmas a {
+    cursor: pointer;
+  }
+}

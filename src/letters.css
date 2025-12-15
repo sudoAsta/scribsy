@@ -48,8 +48,9 @@ body.letters.letters-splash-active {
 
 /* Inner content */
 .letters-hero-inner {
-  max-width: 1000px;
+  width: min(100%, 1100px);  /* fluid up to 1100px */
   margin: 0 auto;
+  text-align: center;        /* avoid left bias on wide screens */
 }
 
 /* Title container */
@@ -1435,64 +1436,65 @@ body:not(.admin-mode) .letter-delete-btn {
   }
 }
 
-/* Tablets & small laptops */
-@media (max-width: 900px) {
+/* -------------------------
+   Responsive centering tweaks
+-------------------------- */
+
+/* Ultra-wide screens: remove side padding to keep it visually centered */
+@media (min-width: 1400px) {
   .letters-hero-splash {
-    padding: 24px 16px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .letters-hero-inner {
-    max-width: 100%;
+    width: min(100%, 1100px);
   }
 }
 
-/* Phones */
+/* Tablets & small laptops */
+@media (max-width: 900px) {
+  .letters-hero-title {
+    font-size: clamp(2.1rem, 5vw, 3.2rem);
+  }
+
+  .letters-hero-sub {
+    font-size: 0.98rem;
+  }
+}
+
+/* Mobile and small screens */
 @media (max-width: 720px) {
   .letters-hero-splash {
-    align-items: flex-start;        /* content starts from top */
+    align-items: center;
     justify-content: center;
-    padding: 24px 16px 18px;
-    text-align: left;               /* friendlier on mobile */
-    overflow-y: auto;               /* ✅ allow vertical scroll if needed */
+    padding: 24px 16px;
+    overflow-y: auto;               /* avoid cutoff if text grows */
     -webkit-overflow-scrolling: touch;
   }
 
   .letters-hero-inner {
-    max-width: 100%;
-    margin-top: 24px;
-  }
-
-  .letters-hero-title {
-    font-size: clamp(1.9rem, 7vw, 2.4rem);
-    line-height: 1.1;
-  }
-
-  .letters-hero-sub {
-    font-size: 0.95rem;
+    width: min(100%, 600px);
   }
 }
 
 /* Very small phones */
 @media (max-width: 480px) {
   .letters-hero-splash {
-    padding: 18px 12px 14px;
-  }
-
-  .letters-hero-inner {
-    margin-top: 18px;
+    padding: 20px 12px;
   }
 
   .letters-hero-title {
-    font-size: clamp(1.7rem, 7.4vw, 2.1rem);
-  }
-
-  /* Allow wrapping so it doesn't go off-screen */
-  .letters-hero-title-text {
-    white-space: normal;           /* overrides nowrap on tiny screens */
+    font-size: clamp(1.8rem, 7vw, 2.2rem);
   }
 
   .letters-hero-sub {
     font-size: 0.9rem;
   }
-}
 
+  /* Let text wrap gracefully on tiny screens */
+  .letters-hero-title-text {
+    white-space: normal;
+    margin: 0 auto;
+  }
+}

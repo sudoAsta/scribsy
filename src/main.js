@@ -1,6 +1,9 @@
 // src/main.js
-
 import './style.css';
+import { initTheme } from './theme-loader.js';
+import { initTiltPosts } from './effects/tilt-posts.js';
+
+initTheme();
 
 // ✅ Auto-detect local or live API URL
 const API = window.location.hostname.includes('localhost')
@@ -105,7 +108,7 @@ function renderPost(post, prepend = false) {
   wrapper.classList.add('post-wrapper');
   wrapper.dataset.id = post.id;
   wrapper.style.backgroundColor = getMoodColor(post.mood);
-  wrapper.style.transform = `rotate(${randomRotation()}deg)`;
+  wrapper.style.setProperty('--base-rot', `${randomRotation()}deg`);
   wrapper.style.overflow = 'visible';
   wrapper.style.position = 'relative';
 
@@ -255,6 +258,12 @@ async function loadPosts() {
     updateEmptyState();
   } catch (err) { console.error('Failed to load posts', err); }
 }
+
+initTiltPosts({
+  selector: '.post-wrapper',
+  rotateAmplitude: 8,
+  hoverScale: 1.03
+});
 
 // Modal controls
 createPostBtn.addEventListener('click', () => showModal());
