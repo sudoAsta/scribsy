@@ -300,11 +300,11 @@ function closeModal() {
 }
 
 // Toggle tabs
-writeTab.addEventListener('click', () => { writeTab.classList.add('active'); drawTab.classList.remove('active'); textArea.style.display = 'block'; canvas.style.display = 'none'; charCount.style.display = 'block'; charCount.textContent = `${textArea.value.length} / 120`; });
+writeTab.addEventListener('click', () => { writeTab.classList.add('active'); drawTab.classList.remove('active'); textArea.style.display = 'block'; canvas.style.display = 'none'; charCount.style.display = 'block'; charCount.textContent = `${textArea.value.length} / 150`; });
 drawTab.addEventListener('click', () => { drawTab.classList.add('active'); writeTab.classList.remove('active'); textArea.style.display = 'none'; canvas.style.display = 'block'; charCount.style.display = 'none'; canvasReady = false; resizeCanvas(); });
 
 // Live counter
-textArea.addEventListener('input', () => { charCount.textContent = `${textArea.value.length} / 120`; });
+textArea.addEventListener('input', () => { charCount.textContent = `${textArea.value.length} / 150`; });
 
 // Drawing events
 let drawing = false;
@@ -321,8 +321,12 @@ canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const { x, y }
 canvas.addEventListener('touchend', stopDrawing);
 
 // Submit a post
+let isSubmittingPost = false;
+
 submitBtn.addEventListener('click', async () => {
+  if (isSubmittingPost) return;
   if (postCount >= MAX_POSTS) return alert(`Max ${MAX_POSTS} posts reached.`);
+
   const name = nameInput.value.trim() || 'Anonymous';
   const mood = moodSelect.value;
   let type, text, image;
@@ -330,31 +334,47 @@ submitBtn.addEventListener('click', async () => {
   if (writeTab.classList.contains('active')) {
     text = textArea.value.trim();
     if (!text) return alert('Write something first!');
-    if (text.length > 120) return alert('Keep under 120 characters.');
+    if (text.length > 150) return alert('Keep under 150 characters.');
     type = 'text';
   } else {
     image = canvas.toDataURL();
     type = 'image';
   }
 
+  const prevLabel = submitBtn.textContent;
+
+  // instant feedback
+  isSubmittingPost = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
   try {
     const res = await fetch(`${API}/api/posts`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ type, text, image, name, mood })
+      body: JSON.stringify({ type, text, image, name, mood })
     });
+
     const newPost = await res.json();
+    if (!res.ok) return alert(newPost?.error || 'Post failed. Please try again.');
+
     renderPost(newPost, true);
     postCount++;
     updateEmptyState();
-  } catch (err) { console.error('Post failed', err); }
 
-  submitBtn.disabled = true;
-  setTimeout(() => submitBtn.disabled = postCount >= MAX_POSTS, 5000);
-  textArea.value = '';
-  nameInput.value = '';
-  moodSelect.value = '';
-  closeModal();
+    textArea.value = '';
+    nameInput.value = '';
+    moodSelect.value = '';
+    closeModal();
+  } catch (err) {
+    console.error('Post failed', err);
+    alert('Network error. Please try again.');
+  } finally {
+    // always restore for next time modal opens
+    submitBtn.textContent = prevLabel; // usually "Submit"
+    submitBtn.disabled = postCount >= MAX_POSTS;
+    isSubmittingPost = false;
+  }
 });
 
 let canvasReady = false;
